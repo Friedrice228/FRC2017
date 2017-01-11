@@ -23,7 +23,10 @@ public:
 	const int Split = 1;
 	const int wait = 2;
 	int driveMode = HDrive; //0 = HDRIVE 1 = split
+
 	int lastState = 0;
+	int strafeState = 0;
+	int yawState = 0;
 
 	void RobotInit() {
 
@@ -95,25 +98,58 @@ public:
 
 				driveMode = lastState;
 
+				strafeState = 0; // reset to the init state
+
+				yawState = 0;
+
 			}
 
 			break;
 
 		}
 
+		//CLOSED LOOP DRIVER SWITCHOUT
 		if (strafe) {
 
-			lastState = driveMode;
-			driveMode = wait;
+			switch (strafeState) {
 
-			driveController->ClosedLoopStrafe();
+			case 0: //INIT STATE
+
+				lastState = driveMode;
+				driveMode = wait;
+
+				strafeState = 1;
+
+				break;
+
+			case 1: //DRIVE STATE
+
+				driveController->ClosedLoopStrafe();
+
+				break;
+
+			}
 
 		} else if (yaw) {
 
-			lastState = driveMode;
-			driveMode = wait;
+			switch (yawState) {
 
-			driveController->ClosedLoopYaw();
+			case 0: //INIT STATE
+
+				lastState = driveMode;
+				driveMode = wait;
+				yawState = 1;
+
+				break;
+
+			case 1: //DRIVE STATE
+
+				driveController->ClosedLoopYaw();
+
+				break;
+
+			}
+
 		}
 
 		//END DRIVECODE

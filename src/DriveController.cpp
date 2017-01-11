@@ -9,10 +9,10 @@
 
 DriveController::DriveController() {
 
-	canTalonFrontLeft = new CANTalon(0);
-	canTalonBackLeft = new CANTalon(1);
-	canTalonBackRight = new CANTalon(2);
-	canTalonFrontRight = new CANTalon(3);
+	canTalonFrontLeft = new CANTalon(21);
+	canTalonBackLeft = new CANTalon(22);
+	canTalonBackRight = new CANTalon(24);
+	canTalonFrontRight = new CANTalon(23);
 	canTalonKicker = new CANTalon(4);
 
 	robotDrive = new RobotDrive(canTalonFrontLeft, canTalonBackLeft,
@@ -25,7 +25,7 @@ DriveController::DriveController() {
 
 void DriveController::SplitArcade(Joystick *JoyThrottle, Joystick *JoyWheel) {
 
-	robotDrive->ArcadeDrive(JoyThrottle->GetY(), JoyWheel->GetX(), false);
+	robotDrive->ArcadeDrive(JoyThrottle->GetY() * .8, (((2*JoyWheel->GetX())-1)) * .8, false);
 
 }
 
@@ -40,20 +40,26 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) {
 
 	hVel = JoyThrottle->GetY();
 
-	leftVel = leftVel + JoyWheel->GetY(); //if the wheel values are reversed, switch out +/- on operations
-	rightVel = rightVel - JoyWheel->GetY();
+	leftVel = leftVel - ((2*JoyWheel->GetX())-1) - .1; //if the wheel values are reversed, switch out +/- on operations
+	rightVel = rightVel - ((2*JoyWheel->GetX())-1)- .1;
 
-	if (abs(rightVel) > 1) {
+	if ((rightVel) > 1) {
 		rightVel = 1;
-	} else if (abs(rightVel) < -1) {
+	} else if ((rightVel) < -1) {
 		rightVel = -1;
 	}
 
-	if (abs(leftVel) > 1) {
+	if ((leftVel) > 1) {
 		leftVel = 1;
-	} else if (abs(leftVel) < -1) {
+	} else if ((leftVel) < -1) {
 		leftVel = -1;
 	}
+
+	std::cout << "L: " << leftVel << std::endl;
+	std::cout << "R: " << rightVel << std::endl;
+
+	leftVel = leftVel * .8;
+	rightVel = rightVel * .8;
 
 	canTalonFrontLeft->Set(leftVel);
 	canTalonBackLeft->Set(leftVel);
