@@ -17,13 +17,14 @@ public:
 
 	RobotDrive *robotDrive;
 	CANTalon *canTalonFrontLeft, *canTalonFrontRight, *canTalonBackRight,
-			*canTalonBackLeft, *canTalonKicker;
+			 *canTalonBackLeft, *canTalonKicker;
 
 	DriveController();
 	void SplitArcade(Joystick *JoystickThrottle, Joystick *JoyWheel);
 	void HDrive(Joystick *JoyThrottle, Joystick *JoyWheel);
 	void ClosedLoopStrafe();
 	void ClosedLoopYaw();
+	void StopAll();
 
 };
 

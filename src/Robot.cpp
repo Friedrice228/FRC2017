@@ -14,9 +14,17 @@ public:
 	DriveController *driveController;
 	Joystick *joyOp, *joyThrottle, *joyWheel;
 
-	const std::string autoNameDefault = "Default";
-	const std::string autoNameCustom = "My Auto";
-	frc::SendableChooser<std::string> chooser;
+	frc::SendableChooser<std::string> autonChooser;
+	frc::SendableChooser<std::string> allianceChooser;
+
+	const std::string gearPlacementUsualAuton = "Gear Placement Usual";
+	const std::string gearPlacementAlternateAuton = "Gear Placement Alternate";
+	const std::string shootAuton = "Shoot";
+	const std::string shootAndLoadAuton = "Shoot and Load";
+
+	const std::string redAlliance = "Red Alliance";
+	const std::string blueAlliance = "Blue Alliance";
+
 	std::string autoSelected;
 
 	const int HDrive = 0;
@@ -36,26 +44,36 @@ public:
 
 		driveController = new DriveController();
 
-		chooser.AddDefault(autoNameDefault, autoNameDefault);
-		chooser.AddObject(autoNameCustom, autoNameCustom);
-		frc::SmartDashboard::PutData("Auto Modes", &chooser);
+		autonChooser.AddDefault(gearPlacementUsualAuton, gearPlacementUsualAuton);
+		autonChooser.AddObject(gearPlacementAlternateAuton, gearPlacementAlternateAuton);
+		autonChooser.AddObject(shootAuton, shootAuton);
+		autonChooser.AddObject(shootAndLoadAuton, shootAndLoadAuton);
+
+		frc::SmartDashboard::PutData("Auto Modes", &autonChooser);
+
+		allianceChooser.AddDefault(blueAlliance, blueAlliance);
+		allianceChooser.AddObject(redAlliance,redAlliance);
+
+		frc::SmartDashboard::PutData("Alliance", &allianceChooser);
 
 	}
 
 	void AutonomousInit() override {
-		autoSelected = chooser.GetSelected();
-		// std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
-		std::cout << "Auto selected: " << autoSelected << std::endl;
+
+		autoSelected = autonChooser.GetSelected();
 
 	}
 
 	void AutonomousPeriodic() {
 
-		if (autoSelected == autoNameCustom) {
-
-		} else {
-
+		if (autoSelected == gearPlacementAlternateAuton) {
+			//System.out.println("Auto 1");
+			std::cout << "Auto 1" << std::endl;
 		}
+		else {
+			std::cout << "Auto 2" << std::endl;
+		}
+
 	}
 
 	void TeleopInit() {
@@ -76,18 +94,29 @@ public:
 
 			driveController->HDrive(joyThrottle, joyWheel);
 
+			std::cout << "HERE" << std::endl;
+
 			if (arcadeDrive) {
-				driveMode = Split;
+
+				driveController->StopAll();
+
+				driveMode = Split; //Split = 1;
 			}
 
 			break;
 
 		case 1: //SPLIT
 
+			std::cout << "DONE" << std::endl;
+
 			driveController->SplitArcade(joyThrottle, joyWheel);
 
 			if (hDrive) {
-				driveMode = hDrive;
+
+				driveController->StopAll();
+
+				driveMode = HDrive;
+
 			}
 
 			break;
@@ -102,6 +131,7 @@ public:
 
 				yawState = 0;
 
+				driveController->StopAll();
 			}
 
 			break;

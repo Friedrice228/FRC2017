@@ -13,7 +13,7 @@ DriveController::DriveController() {
 	canTalonBackLeft = new CANTalon(22);
 	canTalonBackRight = new CANTalon(24);
 	canTalonFrontRight = new CANTalon(23);
-	canTalonKicker = new CANTalon(4);
+	canTalonKicker = new CANTalon(27);
 
 	robotDrive = new RobotDrive(canTalonFrontLeft, canTalonBackLeft,
 			canTalonFrontRight, canTalonBackRight);
@@ -38,7 +38,7 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) {
 	leftVel = JoyThrottle->GetY();
 	rightVel = -JoyThrottle->GetY();
 
-	hVel = JoyThrottle->GetY();
+	hVel = JoyThrottle->GetX();
 
 	leftVel = leftVel - ((2*JoyWheel->GetX())-1) - .1; //if the wheel values are reversed, switch out +/- on operations
 	rightVel = rightVel - ((2*JoyWheel->GetX())-1)- .1;
@@ -78,4 +78,16 @@ void DriveController::ClosedLoopStrafe() {
 void DriveController::ClosedLoopYaw() {
 
 }
+
+void DriveController::StopAll() {
+
+	canTalonFrontLeft->Set(0);
+	canTalonBackLeft->Set(0);
+
+	canTalonFrontRight->Set(0);
+	canTalonBackRight->Set(0);
+
+	canTalonKicker->Set(0);
+}
+
 
