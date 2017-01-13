@@ -26,6 +26,7 @@ public:
 	const std::string blueAlliance = "Blue Alliance";
 
 	std::string autoSelected;
+	std::string allianceSelected;
 
 	const int HDrive = 0;
 	const int Split = 1;
@@ -62,16 +63,34 @@ public:
 
 		autoSelected = autonChooser.GetSelected();
 
+		allianceSelected = allianceChooser.GetSelected();
+
 	}
 
 	void AutonomousPeriodic() {
 
-		if (autoSelected == gearPlacementAlternateAuton) {
-			//System.out.println("Auto 1");
+		if (autoSelected == gearPlacementUsualAuton) {
 			std::cout << "Auto 1" << std::endl;
 		}
-		else {
+		else if (autoSelected == gearPlacementAlternateAuton) {
 			std::cout << "Auto 2" << std::endl;
+		}
+		else if (autoSelected == shootAuton){
+			std::cout << "Auto 3" << std::endl;
+		}
+		else if (autoSelected == shootAndLoadAuton){
+			std::cout << "Auto 4" << std::endl;
+
+		}
+
+		if (allianceSelected == redAlliance){
+
+			std::cout << "Red" << std::endl;
+
+		}else{
+
+			std::cout << "Blue" << std::endl;
+
 		}
 
 	}

@@ -25,7 +25,7 @@ DriveController::DriveController() {
 
 void DriveController::SplitArcade(Joystick *JoyThrottle, Joystick *JoyWheel) {
 
-	robotDrive->ArcadeDrive(JoyThrottle->GetY() * .8, (((2*JoyWheel->GetX())-1)) * .8, false);
+	robotDrive->ArcadeDrive(JoyThrottle->GetY() * .8, (((JoyWheel->GetX()))) * .8, false);
 
 }
 
@@ -40,8 +40,8 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) {
 
 	hVel = JoyThrottle->GetX();
 
-	leftVel = leftVel - ((2*JoyWheel->GetX())-1) - .1; //if the wheel values are reversed, switch out +/- on operations
-	rightVel = rightVel - ((2*JoyWheel->GetX())-1)- .1;
+	leftVel = leftVel - ((JoyWheel->GetX())) - .1; //if the wheel values are reversed, switch out +/- on operations
+	rightVel = rightVel - ((JoyWheel->GetX()))- .1;
 
 	if ((rightVel) > 1) {
 		rightVel = 1;
