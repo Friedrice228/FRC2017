@@ -6,12 +6,13 @@
  */
 
 #include <DriveController.h>
+#define PI 3.1415926
 
 using namespace std::chrono_literals;
 
 const double MAX_Y_RPM = 550;
 const double MAX_X_RPM = 250;
-const double MAX_YAW_RATE = 20 * ((3.1415926) / 180);
+const double MAX_YAW_RATE = 20 * ((PI) / 180);
 const double K_P_YAW = 0;
 
 double l_error, r_error, kick_error;
@@ -51,15 +52,15 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel,
 bool is_kick) {
 
 	double target_l, target_r, target_kick, target_yaw_rate;
-	double yaw_rate_current = (double) ahrs->GetRawGyroZ() * ((3.1415926)/180); //Right is positive angular velocity
+	double yaw_rate_current = (double) ahrs->GetRawGyroZ() * ((PI)/180); //Right is positive angular velocity
+
+	std::cout << "KICK: " << (bool) is_kick << std::endl;
+	std::cout << "AHRS: " << yaw_rate_current << std::endl;
 
 	target_l = JoyThrottle->GetY() * MAX_Y_RPM;
 	target_r = -target_l;
 
 	target_kick = JoyThrottle->GetX() * MAX_X_RPM * (bool) is_kick;
-
-	//std::cout << "KICK: " << (bool) is_kick << std::endl;
-	std::cout << "AHRS: " << yaw_rate_current << std::endl;
 
 	target_yaw_rate = JoyWheel->GetX() * MAX_YAW_RATE;
 
@@ -140,7 +141,7 @@ void DriveController::HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel,
 
 		driveController->HDrive(JoyThrottle, JoyWheel, *is_kick);
 
-		std::this_thread::sleep_for(.1s);
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 	}
 }
