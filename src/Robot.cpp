@@ -14,6 +14,7 @@
 #include <GearRail.h>
 #include <Conveyor.h>
 #include <TeleopStateMachine.h>
+#include <Autonomous.h>
 
 class Robot: public frc::IterativeRobot {
 public:
@@ -26,6 +27,7 @@ public:
 	Conveyor *conveyor_;
 	Vision *vision_;
 	TeleopStateMachine *teleop_State_Machine;
+	Autonomous *autonomous_;
 
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
@@ -44,14 +46,6 @@ public:
 	const int HDrive = 0;
 	const int Split = 1;
 	int driveMode = HDrive; //0 = HDRIVE 1 = split
-
-	const int initHMode = 0;
-	const int loopHMode = 1;
-	int HDriveInitMode = initHMode;
-
-	const int initSplitMode = 0;
-	const int loopSplitMode = 1;
-	int SplitInitMode = initSplitMode;
 
 	bool is_kick;
 
@@ -72,6 +66,8 @@ public:
 		conveyor_ = new Conveyor();
 
 		vision_ = new Vision();
+
+		autonomous_ = new Autonomous();
 
 		teleop_State_Machine = new TeleopStateMachine(fly_wheel, conveyor_, gear_Rail,
 				elevator_, drive_Controller, vision_);
@@ -137,12 +133,15 @@ public:
 	void TeleopPeriodic() {
 
 		//START DRIVE CODE
+		const int HDrive = 0;
+		const int Split = 1;
+
 		bool hDrive = joyThrottle->GetRawButton(1);
 		bool arcadeDrive = joyThrottle->GetRawButton(2);
 
 		switch (driveMode) {
 
-		case 0: //HDRIVE
+		case HDrive: //HDRIVE
 
 			is_kick = true;
 
@@ -157,7 +156,7 @@ public:
 
 			break;
 
-		case 1: //SPLIT
+		case Split: //SPLIT
 
 			is_kick = false;
 

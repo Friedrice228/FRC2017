@@ -7,6 +7,10 @@
 
 #include <Elevator.h>
 
+const int stop_state = 0;
+const int elevate_state = 1;
+const int reverse_state = 2;
+
 Elevator::Elevator() {
 
 	canTalonElevatorTop = new CANTalon(11);
@@ -14,18 +18,49 @@ Elevator::Elevator() {
 
 }
 
-void Elevator::elevate(double speed){
+void Elevator::elevate(double speed) {
+
+	canTalonElevatorTop->Set(speed);
+	canTalonElevatorBottom->Set(speed);
 
 }
 
-void Elevator::stop(){
+void Elevator::stop() {
+
+	canTalonElevatorTop->Set(0);
+	canTalonElevatorBottom->Set(0);
 
 }
 
-void Elevator::reversed(double speed){
+void Elevator::reverse(double speed) {
+
+	canTalonElevatorTop->Set(-speed);
+	canTalonElevatorBottom->Set(-speed);
 
 }
 
-void Elevator::elevator_state_machine(){
+void Elevator::elevator_state_machine() {
+
+	switch (elevator_state) {
+
+	case stop_state:
+
+		void stop();
+
+		break;
+
+	case elevate_state:
+
+		elevate(.5);
+
+		break;
+
+	case reverse_state:
+
+		reverse(.5);
+
+		break;
+
+	}
 
 }

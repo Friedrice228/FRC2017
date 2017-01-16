@@ -11,7 +11,7 @@
 using namespace std::chrono_literals;
 
 const double MAX_Y_RPM = 550;
-const double MAX_X_RPM = 250;
+const double MAX_X_RPM = 500;
 const double MAX_YAW_RATE = 20 * ((PI) / 180);
 const double K_P_YAW = 0;
 
@@ -21,10 +21,13 @@ double r_last_error = 0;
 double kick_last_error = 0;
 
 const double K_P_LEFT = 0;
+const double K_F_LEFT = 0;
 double P_LEFT = 0;
 const double K_P_RIGHT = 0;
+const double K_F_RIGHT = 0;
 double P_RIGHT = 0;
-const double K_P_KICK = 0;
+const double K_P_KICK = .00009;
+const double K_F_KICK = .02;
 double P_KICK = 0;
 
 DriveController::DriveController() {
@@ -52,10 +55,7 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel,
 bool is_kick) {
 
 	double target_l, target_r, target_kick, target_yaw_rate;
-	double yaw_rate_current = (double) ahrs->GetRawGyroZ() * ((PI)/180); //Right is positive angular velocity
-
-	std::cout << "KICK: " << (bool) is_kick << std::endl;
-	std::cout << "AHRS: " << yaw_rate_current << std::endl;
+	double yaw_rate_current = (double) ahrs->GetRawGyroZ() * (double)((PI)/180); //Right is positive angular velocity
 
 	target_l = JoyThrottle->GetY() * MAX_Y_RPM;
 	target_r = -target_l;
@@ -92,9 +92,13 @@ bool is_kick) {
 
 	}
 
-	double l_current = canTalonFrontLeft->GetEncVel();
-	double r_current = canTalonFrontRight->GetEncVel();
-	double kick_current = canTalonKicker->GetEncVel();
+	double l_current = ((double)canTalonFrontLeft->GetEncVel()/(double)4096) * 600;
+	double r_current = ((double)canTalonFrontRight->GetEncVel()/(double)4096) * 600;
+	double kick_current = ((double)canTalonKicker->GetEncVel()/(double)4096) * 600; //conversion to RPM from native unit
+
+	std::cout << "IS KICK: " << (bool)is_kick;
+	std::cout << " CURRENT: " << kick_current;
+	std::cout << " JoyVal: " << JoyThrottle->GetX() << std::endl;
 
 	l_error = target_l - l_current;
 	r_error = target_r - r_current;
@@ -104,11 +108,15 @@ bool is_kick) {
 	P_RIGHT = K_P_RIGHT * r_error;
 	P_KICK = K_P_KICK * kick_error;
 
-	canTalonFrontLeft->Set(P_LEFT);
-	canTalonBackLeft->Set(P_LEFT);
-	canTalonFrontRight->Set(P_RIGHT);
-	canTalonBackRight->Set(P_RIGHT);
-	canTalonKicker->Set(P_KICK);
+	double total_right = P_RIGHT + K_F_RIGHT;
+	double total_left = P_LEFT + K_F_LEFT;
+	double total_kick = P_KICK + K_F_KICK;
+
+	canTalonFrontLeft->Set(total_left);
+	canTalonBackLeft->Set(total_left);
+	canTalonFrontRight->Set(total_right);
+	canTalonBackRight->Set(total_right);
+	canTalonKicker->Set(total_kick);
 
 }
 

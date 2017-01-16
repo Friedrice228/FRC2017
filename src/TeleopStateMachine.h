@@ -21,6 +21,8 @@ public:
 
 	TeleopStateMachine(Flywheel *flywheelP, Conveyor *conveyorP, GearRail *gearRailP,
 			Elevator *elevatorP, DriveController *driveControllerP, Vision *visionP);
+	void StateMachine(bool is_gear, bool is_fire, bool is_climb);
+
 
 
 

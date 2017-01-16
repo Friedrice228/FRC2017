@@ -12,6 +12,10 @@
 class GearRail {
 public:
 
+	const int close_state_h = 0;
+	const int open_state_h = 1;
+	int gear_rail_state = close_state_h;
+
 	DoubleSolenoid *gearRailPistonRight, *gearRailPistonLeft;
 
 	GearRail();
