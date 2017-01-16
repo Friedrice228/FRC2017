@@ -7,6 +7,25 @@
 
 #include <DriveController.h>
 
+using namespace std::chrono_literals;
+
+const double MAX_Y_RPM = 550;
+const double MAX_X_RPM = 250;
+const double MAX_YAW_RATE = 20 * ((3.1415926) / 180);
+const double K_P_YAW = 0;
+
+double l_error, r_error, kick_error;
+double l_last_error = 0;
+double r_last_error = 0;
+double kick_last_error = 0;
+
+const double K_P_LEFT = 0;
+double P_LEFT = 0;
+const double K_P_RIGHT = 0;
+double P_RIGHT = 0;
+const double K_P_KICK = 0;
+double P_KICK = 0;
+
 DriveController::DriveController() {
 
 	canTalonFrontLeft = new CANTalon(21);
@@ -21,61 +40,74 @@ DriveController::DriveController() {
 	robotDrive->SetInvertedMotor(RobotDrive::MotorType::kRearLeftMotor, true);
 	robotDrive->SetInvertedMotor(RobotDrive::MotorType::kFrontRightMotor, true);
 	robotDrive->SetInvertedMotor(RobotDrive::MotorType::kRearRightMotor, true);
+
+	ahrs = new AHRS(SPI::Port::kMXP);
+
+	kickerPiston = new DoubleSolenoid(4, 0, 1);
+
 }
 
-void DriveController::SplitArcade(Joystick *JoyThrottle, Joystick *JoyWheel) {
+void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel,
+bool is_kick) {
 
-	robotDrive->ArcadeDrive(JoyThrottle->GetY() * .8, (((JoyWheel->GetX()))) * .8, false);
+	double target_l, target_r, target_kick, target_yaw_rate;
+	double yaw_rate_current = (double) ahrs->GetRawGyroZ() * ((3.1415926)/180); //Right is positive angular velocity
 
-}
+	target_l = JoyThrottle->GetY() * MAX_Y_RPM;
+	target_r = -target_l;
 
-void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) {
+	target_kick = JoyThrottle->GetX() * MAX_X_RPM * (bool) is_kick;
 
-	double leftVel;
-	double rightVel;
-	double hVel;
+	//std::cout << "KICK: " << (bool) is_kick << std::endl;
+	std::cout << "AHRS: " << yaw_rate_current << std::endl;
 
-	leftVel = JoyThrottle->GetY();
-	rightVel = -JoyThrottle->GetY();
+	target_yaw_rate = JoyWheel->GetX() * MAX_YAW_RATE;
 
-	hVel = JoyThrottle->GetX();
+	target_l = target_l + (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
+	target_r = target_r - (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
 
-	leftVel = leftVel - ((JoyWheel->GetX())) - .1; //if the wheel values are reversed, switch out +/- on operations
-	rightVel = rightVel - ((JoyWheel->GetX()))- .1;
+	double yaw_error = yaw_rate_current - target_yaw_rate;
 
-	if ((rightVel) > 1) {
-		rightVel = 1;
-	} else if ((rightVel) < -1) {
-		rightVel = -1;
+	double yaw_output = K_P_YAW * yaw_error;
+
+	target_l += yaw_output;
+	target_r -= yaw_output;
+
+	if (target_l > 550) {
+
+		target_l = 550;
+
+	} else if (target_l < -550) {
+
+		target_l = -550;
+	}
+	if (target_r > 550) {
+
+		target_r = 550;
+
+	} else if (target_r < -550) {
+
+		target_r = -550;
+
 	}
 
-	if ((leftVel) > 1) {
-		leftVel = 1;
-	} else if ((leftVel) < -1) {
-		leftVel = -1;
-	}
+	double l_current = canTalonFrontLeft->GetEncVel();
+	double r_current = canTalonFrontRight->GetEncVel();
+	double kick_current = canTalonKicker->GetEncVel();
 
-	std::cout << "L: " << leftVel << std::endl;
-	std::cout << "R: " << rightVel << std::endl;
+	l_error = target_l - l_current;
+	r_error = target_r - r_current;
+	kick_error = target_kick - kick_current;
 
-	leftVel = leftVel * .8;
-	rightVel = rightVel * .8;
+	P_LEFT = K_P_LEFT * l_error;
+	P_RIGHT = K_P_RIGHT * r_error;
+	P_KICK = K_P_KICK * kick_error;
 
-	canTalonFrontLeft->Set(leftVel);
-	canTalonBackLeft->Set(leftVel);
-
-	canTalonFrontRight->Set(rightVel);
-	canTalonBackRight->Set(rightVel);
-
-	canTalonKicker->Set(hVel);
-
-}
-
-void DriveController::ClosedLoopStrafe() {
-
-}
-
-void DriveController::ClosedLoopYaw() {
+	canTalonFrontLeft->Set(P_LEFT);
+	canTalonBackLeft->Set(P_LEFT);
+	canTalonFrontRight->Set(P_RIGHT);
+	canTalonBackRight->Set(P_RIGHT);
+	canTalonKicker->Set(P_KICK);
 
 }
 
@@ -89,5 +121,45 @@ void DriveController::StopAll() {
 
 	canTalonKicker->Set(0);
 }
+
+void DriveController::KickerUp() {
+
+	kickerPiston->Set(DoubleSolenoid::Value::kReverse);
+
+}
+
+void DriveController::KickerDown() {
+
+	kickerPiston->Set(DoubleSolenoid::Value::kForward);
+}
+
+void DriveController::HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel,
+		bool *is_kick, DriveController *driveController) {
+
+	while (true) {
+
+		driveController->HDrive(JoyThrottle, JoyWheel, *is_kick);
+
+		std::this_thread::sleep_for(.1s);
+
+	}
+}
+
+void DriveController::StartThreads(Joystick *JoyThrottle, Joystick *JoyWheel,
+		bool *is_kick) {
+
+	DriveController *dc = this;
+
+	std::thread HDriveThread(&DriveController::HDriveWrapper, JoyThrottle,
+			JoyWheel, is_kick, dc);
+	HDriveThread.detach();
+
+
+}
+
+
+
+
+
 
 

@@ -1,18 +1,31 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <thread>
 
+#include "WPILib.h"
 #include <IterativeRobot.h>
 #include <LiveWindow/LiveWindow.h>
 #include <SmartDashboard/SendableChooser.h>
 #include <SmartDashboard/SmartDashboard.h>
 #include <DriveController.h>
+#include <Flywheel.h>
+#include <Elevator.h>
+#include <GearRail.h>
+#include <Conveyor.h>
+#include <TeleopStateMachine.h>
 
 class Robot: public frc::IterativeRobot {
 public:
 
-	DriveController *driveController;
+	DriveController *drive_Controller;
 	Joystick *joyOp, *joyThrottle, *joyWheel;
+	Flywheel *fly_wheel;
+	Elevator *elevator_;
+	GearRail *gear_Rail;
+	Conveyor *conveyor_;
+	Vision *vision_;
+	TeleopStateMachine *teleop_State_Machine;
 
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
@@ -30,12 +43,17 @@ public:
 
 	const int HDrive = 0;
 	const int Split = 1;
-	const int wait = 2;
 	int driveMode = HDrive; //0 = HDRIVE 1 = split
 
-	int lastState = 0;
-	int strafeState = 0;
-	int yawState = 0;
+	const int initHMode = 0;
+	const int loopHMode = 1;
+	int HDriveInitMode = initHMode;
+
+	const int initSplitMode = 0;
+	const int loopSplitMode = 1;
+	int SplitInitMode = initSplitMode;
+
+	bool is_kick;
 
 	void RobotInit() {
 
@@ -43,19 +61,36 @@ public:
 		joyThrottle = new Joystick(1);
 		joyWheel = new Joystick(2);
 
-		driveController = new DriveController();
+		drive_Controller = new DriveController();
 
-		autonChooser.AddDefault(gearPlacementUsualAuton, gearPlacementUsualAuton);
-		autonChooser.AddObject(gearPlacementAlternateAuton, gearPlacementAlternateAuton);
+		fly_wheel = new Flywheel();
+
+		elevator_ = new Elevator();
+
+		gear_Rail = new GearRail();
+
+		conveyor_ = new Conveyor();
+
+		vision_ = new Vision();
+
+		teleop_State_Machine = new TeleopStateMachine(fly_wheel, conveyor_, gear_Rail,
+				elevator_, drive_Controller, vision_);
+
+		autonChooser.AddDefault(gearPlacementUsualAuton,
+				gearPlacementUsualAuton);
+		autonChooser.AddObject(gearPlacementAlternateAuton,
+				gearPlacementAlternateAuton);
 		autonChooser.AddObject(shootAuton, shootAuton);
 		autonChooser.AddObject(shootAndLoadAuton, shootAndLoadAuton);
 
 		frc::SmartDashboard::PutData("Auto Modes", &autonChooser);
 
 		allianceChooser.AddDefault(blueAlliance, blueAlliance);
-		allianceChooser.AddObject(redAlliance,redAlliance);
+		allianceChooser.AddObject(redAlliance, redAlliance);
 
 		frc::SmartDashboard::PutData("Alliance", &allianceChooser);
+
+		is_kick = true;
 
 	}
 
@@ -71,23 +106,20 @@ public:
 
 		if (autoSelected == gearPlacementUsualAuton) {
 			std::cout << "Auto 1" << std::endl;
-		}
-		else if (autoSelected == gearPlacementAlternateAuton) {
+		} else if (autoSelected == gearPlacementAlternateAuton) {
 			std::cout << "Auto 2" << std::endl;
-		}
-		else if (autoSelected == shootAuton){
+		} else if (autoSelected == shootAuton) {
 			std::cout << "Auto 3" << std::endl;
-		}
-		else if (autoSelected == shootAndLoadAuton){
+		} else if (autoSelected == shootAndLoadAuton) {
 			std::cout << "Auto 4" << std::endl;
 
 		}
 
-		if (allianceSelected == redAlliance){
+		if (allianceSelected == redAlliance) {
 
 			std::cout << "Red" << std::endl;
 
-		}else{
+		} else {
 
 			std::cout << "Blue" << std::endl;
 
@@ -97,6 +129,9 @@ public:
 
 	void TeleopInit() {
 
+		drive_Controller->StartThreads(joyThrottle, joyWheel, &is_kick);
+		drive_Controller->KickerDown();
+
 	}
 
 	void TeleopPeriodic() {
@@ -104,20 +139,18 @@ public:
 		//START DRIVE CODE
 		bool hDrive = joyThrottle->GetRawButton(1);
 		bool arcadeDrive = joyThrottle->GetRawButton(2);
-		bool strafe = joyThrottle->GetRawButton(3);
-		bool yaw = joyThrottle->GetRawButton(4);
 
 		switch (driveMode) {
 
 		case 0: //HDRIVE
 
-			driveController->HDrive(joyThrottle, joyWheel);
-
-			std::cout << "HERE" << std::endl;
+			is_kick = true;
 
 			if (arcadeDrive) {
 
-				driveController->StopAll();
+				drive_Controller->StopAll();
+
+				drive_Controller->KickerUp();
 
 				driveMode = Split; //Split = 1;
 			}
@@ -126,13 +159,13 @@ public:
 
 		case 1: //SPLIT
 
-			std::cout << "DONE" << std::endl;
-
-			driveController->SplitArcade(joyThrottle, joyWheel);
+			is_kick = false;
 
 			if (hDrive) {
 
-				driveController->StopAll();
+				drive_Controller->StopAll();
+
+				drive_Controller->KickerDown();
 
 				driveMode = HDrive;
 
@@ -140,72 +173,19 @@ public:
 
 			break;
 
-		case 2: //WAIT
-
-			if (!strafe && !yaw) {
-
-				driveMode = lastState;
-
-				strafeState = 0; // reset to the init state
-
-				yawState = 0;
-
-				driveController->StopAll();
-			}
-
-			break;
-
-		}
-
-		//CLOSED LOOP DRIVER SWITCHOUT
-		if (strafe) {
-
-			switch (strafeState) {
-
-			case 0: //INIT STATE
-
-				lastState = driveMode;
-				driveMode = wait;
-
-				strafeState = 1;
-
-				break;
-
-			case 1: //DRIVE STATE
-
-				driveController->ClosedLoopStrafe();
-
-				break;
-
-			}
-
-		} else if (yaw) {
-
-			switch (yawState) {
-
-			case 0: //INIT STATE
-
-				lastState = driveMode;
-				driveMode = wait;
-				yawState = 1;
-
-				break;
-
-			case 1: //DRIVE STATE
-
-				driveController->ClosedLoopYaw();
-
-				break;
-
-			}
-
 		}
 
 		//END DRIVECODE
 
+
 	}
 
 	void TestPeriodic() {
+		CANTalon *canTalon = new CANTalon(21);
+
+		canTalon->Set(1);
+
+		std::cout << canTalon->GetEncPosition() << std::endl;
 
 	}
 
