@@ -150,10 +150,12 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb)
 
 		climber_->climber_state = climber_->climbing_state_h;
 
-		if (!is_climb){
+		if (!is_climb) {
 
-			state = finish_climbing;
+			state = wait_for_button_state;
 		}
+
+
 
 		break;
 

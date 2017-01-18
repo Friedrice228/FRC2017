@@ -13,6 +13,7 @@
 #include <Elevator.h>
 #include <GearRail.h>
 #include <Conveyor.h>
+#include <Climber.h>
 #include <TeleopStateMachine.h>
 #include <Autonomous.h>
 
@@ -23,11 +24,12 @@ public:
 	Joystick *joyOp, *joyThrottle, *joyWheel;
 	Flywheel *fly_wheel;
 	Elevator *elevator_;
-	GearRail *gear_Rail;
+	GearRail *gear_rail;
 	Conveyor *conveyor_;
 	Vision *vision_;
 	TeleopStateMachine *teleop_State_Machine;
 	Autonomous *autonomous_;
+	Climber *climber_;
 
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
@@ -61,7 +63,7 @@ public:
 
 		elevator_ = new Elevator();
 
-		gear_Rail = new GearRail();
+		gear_rail = new GearRail();
 
 		conveyor_ = new Conveyor();
 
@@ -69,8 +71,10 @@ public:
 
 		autonomous_ = new Autonomous();
 
-		teleop_State_Machine = new TeleopStateMachine(fly_wheel, conveyor_, gear_Rail,
-				elevator_, drive_Controller, vision_);
+		climber_ = new Climber();
+
+		teleop_State_Machine = new TeleopStateMachine(fly_wheel, conveyor_, gear_rail,
+				elevator_, drive_Controller, vision_, climber_);
 
 		autonChooser.AddDefault(gearPlacementUsualAuton,
 				gearPlacementUsualAuton);
@@ -125,14 +129,15 @@ public:
 
 	void TeleopInit() {
 
-		drive_Controller->StartThreads(joyThrottle, joyWheel, &is_kick);
+	    drive_Controller->StartThreads(joyThrottle, joyWheel, &is_kick);
 		drive_Controller->KickerDown();
 
 	}
 
-	void TeleopPeriodic() {
+	void TeleopPeriodic() { //drive train 21 - intake 26
 
-		//START DRIVE CODE
+
+	//START DRIVE CODE
 		const int HDrive = 0;
 		const int Split = 1;
 
@@ -175,7 +180,6 @@ public:
 		}
 
 		//END DRIVECODE
-
 
 	}
 

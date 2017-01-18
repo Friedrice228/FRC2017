@@ -13,8 +13,8 @@ const int open_state = 1;
 
 GearRail::GearRail() {
 
-	gearRailPistonLeft = new DoubleSolenoid(4, 4, 5);
-	gearRailPistonRight = new DoubleSolenoid(4, 3, 2);
+	gearRailPistonLeft = new DoubleSolenoid(4,2, 3);   //(4, 4, 5);
+	gearRailPistonRight = new DoubleSolenoid(4, 0, 1); //(4, 3, 2);
 
 
 
@@ -40,13 +40,13 @@ void GearRail::gear_rail_state_machine() {
 
 	case close_state:
 
-		void close();
+		close();
 
 		break;
 
 	case open_state:
 
-		void open();
+		open();
 
 		break;
 

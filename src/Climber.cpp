@@ -12,8 +12,8 @@ const int climbing_state = 1;
 
 Climber::Climber() { // not climbing back down - sean
 
-	canTalonClimberRight = new CANTalon(19);
-	canTalonClimberLeft = new CANTalon(20);
+	canTalonClimberRight = new CANTalon(26); //intake
+	canTalonClimberLeft = new CANTalon(21); //flywheel
 
 }
 
@@ -42,6 +42,7 @@ void Climber::climber_state_machine(){
 
 	case climbing_state:
 
+		std::cout << canTalonClimberRight->GetOutputCurrent() << std::endl;
 		climbing(.5);
 
 		break;

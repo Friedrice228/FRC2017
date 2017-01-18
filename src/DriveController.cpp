@@ -38,16 +38,16 @@ DriveController::DriveController() {
 	canTalonFrontRight = new CANTalon(23);
 	canTalonKicker = new CANTalon(27);
 
-	robotDrive = new RobotDrive(canTalonFrontLeft, canTalonBackLeft,
+	/*robotDrive = new RobotDrive(canTalonFrontLeft, canTalonBackLeft,
 			canTalonFrontRight, canTalonBackRight);
 	robotDrive->SetInvertedMotor(RobotDrive::MotorType::kFrontLeftMotor, true);
 	robotDrive->SetInvertedMotor(RobotDrive::MotorType::kRearLeftMotor, true);
 	robotDrive->SetInvertedMotor(RobotDrive::MotorType::kFrontRightMotor, true);
-	robotDrive->SetInvertedMotor(RobotDrive::MotorType::kRearRightMotor, true);
+	robotDrive->SetInvertedMotor(RobotDrive::MotorType::kRearRightMotor, true);*/
 
 	ahrs = new AHRS(SPI::Port::kMXP);
 
-	kickerPiston = new DoubleSolenoid(4, 0, 1);
+	kickerPiston = new DoubleSolenoid(4, 5, 6);
 
 }
 

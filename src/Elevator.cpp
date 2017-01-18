@@ -13,8 +13,8 @@ const int reverse_state = 2;
 
 Elevator::Elevator() {
 
-	canTalonElevatorTop = new CANTalon(11);
-	canTalonElevatorBottom = new CANTalon(12);
+	canTalonElevatorTop = new CANTalon(29);
+	canTalonElevatorBottom = new CANTalon(30);
 
 }
 
@@ -45,7 +45,7 @@ void Elevator::elevator_state_machine() {
 
 	case stop_state:
 
-		void stop();
+		stop();
 
 		break;
 

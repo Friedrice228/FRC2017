@@ -6,8 +6,8 @@ const int stop_state = 2;
 
 Conveyor::Conveyor() {
 
-	canTalonFront = new CANTalon(15);
-	canTalonBack = new CANTalon(16);
+	canTalonFront = new CANTalon(20);
+	canTalonBack = new CANTalon(29);
 
 }
 
@@ -50,7 +50,7 @@ void Conveyor::con_state_machine() {
 
 	case stop_state:
 
-		void stop();
+		stop();
 
 		break;
 	}
