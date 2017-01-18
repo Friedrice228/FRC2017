@@ -11,6 +11,7 @@
 #include <GearRail.h>
 #include <Conveyor.h>
 #include <Vision.h>
+#include <Climber.h>
 
 #ifndef TELEOPSTATEMACHINE_H_
 #define TELEOPSTATEMACHINE_H_
@@ -20,7 +21,7 @@ public:
 
 
 	TeleopStateMachine(Flywheel *flywheelP, Conveyor *conveyorP, GearRail *gearRailP,
-			Elevator *elevatorP, DriveController *driveControllerP, Vision *visionP);
+			Elevator *elevatorP, DriveController *driveControllerP, Vision *visionP, Climber *climberP);
 	void StateMachine(bool is_gear, bool is_fire, bool is_climb);
 
 
