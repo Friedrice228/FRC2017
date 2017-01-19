@@ -21,12 +21,12 @@ public:
 
 	Flywheel();
 
-	void spin(double ref);
-	void stop();
-	bool is_at_speed();
-	void flywheel_state_machine();
-	void start_thread();
-
+	void Spin(int ref);
+	void Stop();
+	bool IsAtSpeed();
+	void FlywheelStateMachine();
+	void StartThread();
+	double GetSpeed();
 
 };
 

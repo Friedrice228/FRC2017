@@ -22,10 +22,10 @@ public:
 
 	Elevator();
 
-	void elevate(double speed);
-	void stop();
-	void reverse(double speed);
-	void elevator_state_machine();
+	void Elevate(double speed);
+	void Stop();
+	void Reverse(double speed);
+	void ElevatorStateMachine();
 
 };
 

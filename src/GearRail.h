@@ -20,9 +20,9 @@ public:
 
 	GearRail();
 
-	void open();
-	void close();
-	void gear_rail_state_machine();
+	void Open();
+	void Close();
+	void GearRailStateMachine();
 
 };
 

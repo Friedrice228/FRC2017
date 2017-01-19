@@ -27,7 +27,7 @@ public:
 	GearRail *gear_rail;
 	Conveyor *conveyor_;
 	Vision *vision_;
-	TeleopStateMachine *teleop_State_Machine;
+	TeleopStateMachine *teleop_state_machine;
 	Autonomous *autonomous_;
 	Climber *climber_;
 
@@ -73,8 +73,8 @@ public:
 
 		climber_ = new Climber();
 
-		teleop_State_Machine = new TeleopStateMachine(fly_wheel, conveyor_, gear_rail,
-				elevator_, drive_Controller, vision_, climber_);
+		teleop_state_machine = new TeleopStateMachine(fly_wheel, conveyor_,
+				gear_rail, elevator_, drive_Controller, vision_, climber_);
 
 		autonChooser.AddDefault(gearPlacementUsualAuton,
 				gearPlacementUsualAuton);
@@ -105,23 +105,36 @@ public:
 	void AutonomousPeriodic() {
 
 		if (autoSelected == gearPlacementUsualAuton) {
+
 			std::cout << "Auto 1" << std::endl;
+
 		} else if (autoSelected == gearPlacementAlternateAuton) {
+
 			std::cout << "Auto 2" << std::endl;
+
 		} else if (autoSelected == shootAuton) {
-			std::cout << "Auto 3" << std::endl;
+
+			if (allianceSelected == redAlliance) {
+
+				std::cout << "Red" << std::endl;
+
+			} else {
+
+				std::cout << "Blue" << std::endl;
+
+			}
+
 		} else if (autoSelected == shootAndLoadAuton) {
-			std::cout << "Auto 4" << std::endl;
 
-		}
+			if (allianceSelected == redAlliance) {
 
-		if (allianceSelected == redAlliance) {
+				std::cout << "Red" << std::endl;
 
-			std::cout << "Red" << std::endl;
+			} else {
 
-		} else {
+				std::cout << "Blue" << std::endl;
 
-			std::cout << "Blue" << std::endl;
+			}
 
 		}
 
@@ -129,15 +142,26 @@ public:
 
 	void TeleopInit() {
 
-	    drive_Controller->StartThreads(joyThrottle, joyWheel, &is_kick);
+		drive_Controller->StartThreads(joyThrottle, joyWheel, &is_kick);
 		drive_Controller->KickerDown();
 
 	}
 
-	void TeleopPeriodic() { //drive train 21 - intake 26
+	void TeleopPeriodic() {
 
+		bool gear_button = joyOp->GetRawButton(5);
+		bool fire_button = joyOp->GetRawButton(6);
+		bool climb_button = joyOp->GetRawButton(7);
+		bool return_button = joyOp->GetRawButton(8);
 
-	//START DRIVE CODE
+		teleop_state_machine->StateMachine(gear_button, fire_button,
+				climb_button, return_button);
+		conveyor_->ConStateMachine();
+		elevator_->ElevatorStateMachine();
+		fly_wheel->FlywheelStateMachine();
+		gear_rail->GearRailStateMachine();
+
+		//START DRIVE CODE
 		const int HDrive = 0;
 		const int Split = 1;
 
@@ -184,9 +208,7 @@ public:
 	}
 
 	void TestPeriodic() {
-		CANTalon *canTalon = new CANTalon(21);
-
-		canTalon->Set(1);
+		CANTalon *canTalon = new CANTalon(24);
 
 		std::cout << canTalon->GetEncPosition() << std::endl;
 

@@ -9,8 +9,29 @@
 
 Autonomous::Autonomous() {
 
+}
+
+void Autonomous::GearPlacementUsualAuton() {
 
 }
 
+void Autonomous::GearPlacementAlternateAuton() {
 
+}
+
+void Autonomous::ShootAutonRed() {
+
+}
+
+void Autonomous::ShootAutonBlue() {
+
+}
+
+void Autonomous::ShootAndLoadAutonBlue() {
+
+}
+
+void Autonomous::ShootAndLoadAutonRed() {
+
+}
 

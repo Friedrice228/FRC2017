@@ -22,10 +22,10 @@ public:
 
 	Conveyor();
 
-	void popcorn(double speed);
-	void stop();
-	void load(double speed);
-	void con_state_machine();
+	void Popcorn(double speed);
+	void Stop();
+	void Load(double speed);
+	void ConStateMachine();
 
 };
 

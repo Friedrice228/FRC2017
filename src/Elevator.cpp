@@ -18,46 +18,46 @@ Elevator::Elevator() {
 
 }
 
-void Elevator::elevate(double speed) {
+void Elevator::Elevate(double speed) {
 
 	canTalonElevatorTop->Set(speed);
 	canTalonElevatorBottom->Set(speed);
 
 }
 
-void Elevator::stop() {
+void Elevator::Stop() {
 
 	canTalonElevatorTop->Set(0);
 	canTalonElevatorBottom->Set(0);
 
 }
 
-void Elevator::reverse(double speed) {
+void Elevator::Reverse(double speed) {
 
 	canTalonElevatorTop->Set(-speed);
 	canTalonElevatorBottom->Set(-speed);
 
 }
 
-void Elevator::elevator_state_machine() {
+void Elevator::ElevatorStateMachine() {
 
 	switch (elevator_state) {
 
 	case stop_state:
 
-		stop();
+		Stop();
 
 		break;
 
 	case elevate_state:
 
-		elevate(.5);
+		Elevate(.5);
 
 		break;
 
 	case reverse_state:
 
-		reverse(.5);
+		Reverse(.5);
 
 		break;
 

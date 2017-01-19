@@ -7,6 +7,14 @@ class Autonomous {
 public:
 	Autonomous();
 
+	void GearPlacementUsualAuton();
+	void GearPlacementAlternateAuton();
+	void ShootAutonRed();
+	void ShootAutonBlue();
+	void ShootAndLoadAutonBlue();
+	void ShootAndLoadAutonRed();
+
+
 };
 
 #endif

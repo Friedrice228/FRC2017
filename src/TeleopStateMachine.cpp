@@ -46,7 +46,7 @@ TeleopStateMachine::TeleopStateMachine(Flywheel *flywheelP, Conveyor *conveyorP,
 
 }
 
-void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb){
+void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb, bool is_ret){
 
 	switch(state) {
 
@@ -109,7 +109,7 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb)
 
 		}
 
-		if (fly_wheel->is_at_speed()) {
+		if (fly_wheel->IsAtSpeed()) {
 
 			state = fire_state;
 		}
@@ -127,7 +127,6 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb)
 			state = wait_for_button_state;
 
 		}
-
 
 		break;
 
@@ -155,13 +154,23 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb)
 			state = wait_for_button_state;
 		}
 
+		if (climber_->CheckCurrent() >= climber_->MAX_CURRENT){
 
+			state = finish_climbing;
+
+		}
 
 		break;
 
 	case finish_climbing:
 
 		climber_->climber_state = climber_->stop_state_h;
+
+		if (is_ret){
+
+			state = wait_for_button_state;
+
+		}
 
 		break;
 

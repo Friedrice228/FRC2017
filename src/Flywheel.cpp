@@ -8,29 +8,48 @@
 
 const int stop_state = 0;
 const int spin_state = 1;
-const double GOAL_RPM = 0;
-const double MAX_FLYWHEEL_ERROR = 0;
+const int GOAL_RPM = 2500;
+const int MAX_FLYWHEEL_ERROR = 0;
 
 Flywheel::Flywheel() {
 
-	canTalonFlywheelRight = new CANTalon(23);
-	canTalonFlywheelLeft = new CANTalon(24);
+	canTalonFlywheelRight = new CANTalon(34);
+		canTalonFlywheelRight->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
+		canTalonFlywheelRight->SetF(0.025);
+		canTalonFlywheelRight->SetP(.01);
+		canTalonFlywheelRight->ConfigNominalOutputVoltage(+2.0f, -0.0f);
+		canTalonFlywheelRight->ConfigPeakOutputVoltage(+12.0f, +2.0f);
+		canTalonFlywheelRight->SetSensorDirection(true);
+		canTalonFlywheelRight->SelectProfileSlot(0);
+
+	canTalonFlywheelLeft = new CANTalon(33);
+		canTalonFlywheelLeft->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
+		canTalonFlywheelLeft->SetF(0);
+		canTalonFlywheelLeft->SetP(0);
+		canTalonFlywheelLeft->ConfigNominalOutputVoltage(+2.0f, -0.0f);
+		canTalonFlywheelLeft->ConfigPeakOutputVoltage(+12.0f, +2.0f);
+		canTalonFlywheelLeft->SetSensorDirection(true);
+		canTalonFlywheelLeft->SelectProfileSlot(0);
+}
+
+void Flywheel::Spin(int ref){
+
+	canTalonFlywheelRight->SetControlMode(CANSpeedController::kSpeed);
+	canTalonFlywheelRight->Set(ref);
+
+	canTalonFlywheelLeft->SetControlMode(CANSpeedController::kSpeed);
+	canTalonFlywheelLeft->Set(ref);
 
 }
 
-void Flywheel::spin(double ref){
-
-
-}
-
-void Flywheel::stop(){
+void Flywheel::Stop(){
 
 	canTalonFlywheelRight->Set(0);
 	canTalonFlywheelLeft->Set(0);
 
 }
 // current speed target speed variable
-bool Flywheel::is_at_speed(){
+bool Flywheel::IsAtSpeed(){
 
 	double flywheel_value = -((double)canTalonFlywheelRight->GetEncVel()/(double)4096) * 600;
 
@@ -46,19 +65,19 @@ bool Flywheel::is_at_speed(){
 
 }
 
-void Flywheel::flywheel_state_machine(){
+void Flywheel::FlywheelStateMachine(){
 
 	switch(flywheel_state) {
 
 	case stop_state:
 
-		stop();
+		Stop();
 
 		break;
 
 	case spin_state:
 
-		spin(GOAL_RPM);
+		Spin(GOAL_RPM);
 
 		break;
 
@@ -66,6 +85,11 @@ void Flywheel::flywheel_state_machine(){
 	}
 }
 
-void Flywheel::start_thread(){
+double Flywheel::GetSpeed() {
+
+	return -((double)canTalonFlywheelRight->GetEncVel()/(double)4096) * 600;
+}
+
+void Flywheel::StartThread(){
 
 }

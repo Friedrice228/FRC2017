@@ -20,33 +20,33 @@ GearRail::GearRail() {
 
 }
 
-void GearRail::open() {
+void GearRail::Open() {
 
 	gearRailPistonLeft->Set(DoubleSolenoid::Value::kReverse);
 	gearRailPistonRight->Set(DoubleSolenoid::Value::kReverse);
 
 }
 
-void GearRail::close() {
+void GearRail::Close() {
 
 	gearRailPistonLeft->Set(DoubleSolenoid::Value::kForward);
 	gearRailPistonRight->Set(DoubleSolenoid::Value::kForward);
 
 }
 
-void GearRail::gear_rail_state_machine() {
+void GearRail::GearRailStateMachine() {
 
 	switch (gear_rail_state) {
 
 	case close_state:
 
-		close();
+		Close();
 
 		break;
 
 	case open_state:
 
-		open();
+		Open();
 
 		break;
 

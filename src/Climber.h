@@ -16,9 +16,12 @@ public:
 	CANTalon *canTalonClimberLeft, *canTalonClimberRight;
 
 	Climber();
-	void climbing(double speed);
-	void stop();
-	void climber_state_machine();
+	void Climbing(double speed);
+	void Stop();
+	void ClimberStateMachine();
+	double CheckCurrent();
+
+	const int MAX_CURRENT = 25.0;
 
 	const int stop_state_h = 0;
 	const int climbing_state_h = 1;

@@ -11,46 +11,46 @@ Conveyor::Conveyor() {
 
 }
 
-void Conveyor::popcorn(double speed) {
+void Conveyor::Popcorn(double speed) {
 
 	canTalonFront->Set(-speed);
 	canTalonBack->Set(-speed);
 
 }
 
-void Conveyor::stop() {
+void Conveyor::Stop() {
 
 	canTalonFront->Set(0);
 	canTalonBack->Set(0);
 
 }
 
-void Conveyor::load(double speed) {
+void Conveyor::Load(double speed) {
 
 	canTalonFront->Set(speed);
 	canTalonBack->Set(speed);
 
 }
 
-void Conveyor::con_state_machine() {
+void Conveyor::ConStateMachine() {
 
 	switch (conveyor_state) {
 
 	case popcorn_state:
 
-		popcorn(.5);
+		Popcorn(.5);
 
 		break;
 
 	case load_state:
 
-		load(.5);
+		Load(.5);
 
 		break;
 
 	case stop_state:
 
-		stop();
+		Stop();
 
 		break;
 	}
