@@ -53,9 +53,9 @@ public:
 
 	void RobotInit() {
 
-		joyOp = new Joystick(0);
-		joyThrottle = new Joystick(1);
-		joyWheel = new Joystick(2);
+		joyOp = new Joystick(JOY_OP);
+		joyThrottle = new Joystick(JOY_THROTTLE);
+		joyWheel = new Joystick(JOY_WHEEL);
 
 		drive_Controller = new DriveController();
 
@@ -153,7 +153,7 @@ public:
 
 		fly_wheel->FlywheelStateMachine();
 
-		if (joyThrottle->GetRawButton(8)) {
+		if (joyThrottle->GetRawButton(RETURN_BUTTON)) {
 
 			fly_wheel->flywheel_state = fly_wheel->spin_state_h;
 
@@ -165,10 +165,10 @@ public:
 		}
 
 #if 0
-		bool gear_button = joyOp->GetRawButton(5);
-		bool fire_button = joyOp->GetRawButton(6);
-		bool climb_button = joyOp->GetRawButton(7);
-		bool return_button = joyOp->GetRawButton(8);
+		bool gear_button = joyOp->GetRawButton(GEAR_BUTTON);
+		bool fire_button = joyOp->GetRawButton(FIRE_BUTTON);
+		bool climb_button = joyOp->GetRawButton(CLIMB_BUTTON);
+		bool return_button = joyOp->GetRawButton(RETURN_BUTTON);
 
 		teleop_state_machine->StateMachine(gear_button, fire_button,
 				climb_button, return_button);
@@ -224,7 +224,7 @@ public:
 	}
 
 	void TestPeriodic() {
-		CANTalon *canTalon = new CANTalon(24);
+		CANTalon *canTalon = new CANTalon(CAN_TALON_BACK_RIGHT);
 
 		std::cout << canTalon->GetEncPosition() << std::endl;
 

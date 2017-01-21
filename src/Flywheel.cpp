@@ -10,24 +10,34 @@ const int stop_state = 0;
 const int spin_state = 1;
 const int GOAL_RPM = 2500;
 const int MAX_FLYWHEEL_ERROR = 0;
+const int CAN_TALON_FLYWHEEL_RIGHT = 27;
+const int CAN_TALON_FLYWHEEL_LEFT = 33;
+const int FLYWHEEL_WAIT_TIME = 10;
+
+const double RIGHT_F_GAIN = 0.025;
+const double RIGHT_P_GAIN = .01;
+const double LEFT_F_GAIN = 0;
+const double LEFT_P_GAIN = 0;
+const double CONVERSION_DIVISION = 4096;
+const double CONVERSION_MULTIPLICATION = 600;
 
 bool active_;
 
 Flywheel::Flywheel() {
 
-	canTalonFlywheelRight = new CANTalon(27);
+	canTalonFlywheelRight = new CANTalon(CAN_TALON_FLYWHEEL_RIGHT);
 	canTalonFlywheelRight->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
-	canTalonFlywheelRight->SetF(0.025);
-	canTalonFlywheelRight->SetP(.01);
+	canTalonFlywheelRight->SetF(RIGHT_F_GAIN);
+	canTalonFlywheelRight->SetP(RIGHT_P_GAIN);
 	canTalonFlywheelRight->ConfigNominalOutputVoltage(+2.0f, -0.0f);
 	canTalonFlywheelRight->ConfigPeakOutputVoltage(+12.0f, +2.0f);
 	canTalonFlywheelRight->SetSensorDirection(true);
 	canTalonFlywheelRight->SelectProfileSlot(0);
 
-	canTalonFlywheelLeft = new CANTalon(33);
+	canTalonFlywheelLeft = new CANTalon(CAN_TALON_FLYWHEEL_LEFT);
 	canTalonFlywheelLeft->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
-	canTalonFlywheelLeft->SetF(0);
-	canTalonFlywheelLeft->SetP(0);
+	canTalonFlywheelLeft->SetF(LEFT_F_GAIN);
+	canTalonFlywheelLeft->SetP(LEFT_P_GAIN);
 	canTalonFlywheelLeft->ConfigNominalOutputVoltage(+2.0f, -0.0f);
 	canTalonFlywheelLeft->ConfigPeakOutputVoltage(+12.0f, +2.0f);
 	canTalonFlywheelLeft->SetSensorDirection(true);
@@ -56,7 +66,7 @@ void Flywheel::Stop() {
 bool Flywheel::IsAtSpeed() {
 
 	double flywheel_value = -((double) canTalonFlywheelRight->GetEncVel()
-			/ (double) 4096) * 600;
+			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
 
 	if (abs(flywheel_value - GOAL_RPM) < MAX_FLYWHEEL_ERROR) {
 
@@ -92,7 +102,7 @@ void Flywheel::FlywheelStateMachine() {
 
 double Flywheel::GetSpeed() {
 
-	return -((double) canTalonFlywheelRight->GetEncVel() / (double) 4096) * 600;
+	return -((double) canTalonFlywheelRight->GetEncVel() / (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
 }
 
 void Flywheel::SpinWrapper(Flywheel *fw, int ref, bool *active) {
@@ -107,13 +117,13 @@ void Flywheel::SpinWrapper(Flywheel *fw, int ref, bool *active) {
 
 			fw->Spin(ref);
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			std::this_thread::sleep_for(std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
 
 		}
 
 		std::cout << "off" << std::endl;
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		std::this_thread::sleep_for(std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
 
 	}
 

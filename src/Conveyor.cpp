@@ -3,11 +3,15 @@
 const int popcorn_state = 0;
 const int load_state = 1;
 const int stop_state = 2;
+const int CAN_TALON_FRONT = 20;
+const int CAN_TALON_BACK = 29;
+const double POPCORN_SPEED = .5;
+const double LOAD_SPEED = .5;
 
 Conveyor::Conveyor() {
 
-	canTalonFront = new CANTalon(20);
-	canTalonBack = new CANTalon(29);
+	canTalonFront = new CANTalon(CAN_TALON_FRONT);
+	canTalonBack = new CANTalon(CAN_TALON_BACK);
 
 }
 
@@ -38,13 +42,13 @@ void Conveyor::ConStateMachine() {
 
 	case popcorn_state:
 
-		Popcorn(.5);
+		Popcorn(POPCORN_SPEED);
 
 		break;
 
 	case load_state:
 
-		Load(.5);
+		Load(LOAD_SPEED);
 
 		break;
 

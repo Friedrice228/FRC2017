@@ -6,14 +6,9 @@
  */
 
 #include <DriveController.h>
-#define PI 3.1415926
 
 using namespace std::chrono;
 
-const double MAX_Y_RPM = 550;
-const double MAX_X_RPM = 2500;
-const double MAX_YAW_RATE = 20 * ((PI) / 180);
-const double K_P_YAW = 0;
 
 double l_error, r_error, kick_error;
 double l_last_error = 0;
@@ -28,15 +23,17 @@ const double K_F_RIGHT = 0;
 double P_RIGHT = 0;
 const double K_P_KICK = .00075;
 const double K_F_KICK = .02;
+const double CONVERSION_DIVISION = 4096;
+const double CONVERSION_MULTIPLICATION = 600;
 double P_KICK = 0;
 
 DriveController::DriveController() {
 
-	canTalonFrontLeft = new CANTalon(21);
-	canTalonBackLeft = new CANTalon(22);
-	canTalonBackRight = new CANTalon(24);
-	canTalonFrontRight = new CANTalon(23);
-	canTalonKicker = new CANTalon(57);
+	canTalonFrontLeft = new CANTalon(CAN_TALON_FRONT_LEFT);
+	canTalonBackLeft = new CANTalon(CAN_TALON_BACK_LEFT);
+	canTalonBackRight = new CANTalon(CAN_TALON_BACK_RIGHT);
+	canTalonFrontRight = new CANTalon(CAN_TALON_FRONT_RIGHT);
+	canTalonKicker = new CANTalon(CAN_TALON_KICKER);
 
 	ahrs = new AHRS(SPI::Port::kMXP);
 
@@ -68,30 +65,30 @@ bool is_kick) {
 	target_l += yaw_output;
 	target_r -= yaw_output;
 
-	if (target_l > 550) {
+	if (target_l > MAX_Y_RPM) {
 
-		target_l = 550;
+		target_l = MAX_Y_RPM;
 
-	} else if (target_l < -550) {
+	} else if (target_l < -MAX_Y_RPM) {
 
-		target_l = -550;
+		target_l = -MAX_Y_RPM;
 	}
-	if (target_r > 550) {
+	if (target_r > MAX_Y_RPM) {
 
-		target_r = 550;
+		target_r = MAX_Y_RPM;
 
-	} else if (target_r < -550) {
+	} else if (target_r < -MAX_Y_RPM) {
 
-		target_r = -550;
+		target_r = -MAX_Y_RPM;
 
 	}
 
-	double l_current = ((double) canTalonFrontLeft->GetEncVel() / (double) 4096)
-			* 600;
+	double l_current = ((double) canTalonFrontLeft->GetEncVel() / (double) CONVERSION_DIVISION)
+			* CONVERSION_MULTIPLICATION;
 	double r_current =
-			((double) canTalonFrontRight->GetEncVel() / (double) 4096) * 600;
+			((double) canTalonFrontRight->GetEncVel() / (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
 	double kick_current =
-			-((double) canTalonKicker->GetEncVel() / (double) 4096) * 600; //conversion to RPM from native unit
+			-((double) canTalonKicker->GetEncVel() / (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION; //conversion to RPM from native unit
 
 	std::cout << "OUTPUT: " << canTalonKicker->Get();
 	std::cout << " CURRRNT: " << kick_current;
@@ -145,7 +142,7 @@ bool *is_kick, DriveController *driveController) {
 
 	while (true) {
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		std::this_thread::sleep_for(std::chrono::milliseconds(DC_SLEEP_TIME));
 
 		driveController->HDrive(JoyThrottle, JoyWheel, *is_kick);
 

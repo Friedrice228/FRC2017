@@ -10,11 +10,15 @@
 const int stop_state = 0;
 const int elevate_state = 1;
 const int reverse_state = 2;
+const int CAN_TALON_ELEVATOR_TOP = 29;
+const int CAN_TALON_ELEVATOR_BOTTOM = 30;
+const double ELEVATE_SPEED = .5;
+const double REVERSE_SPEED = .5;
 
 Elevator::Elevator() {
 
-	canTalonElevatorTop = new CANTalon(29);
-	canTalonElevatorBottom = new CANTalon(30);
+	canTalonElevatorTop = new CANTalon(CAN_TALON_ELEVATOR_TOP);
+	canTalonElevatorBottom = new CANTalon(CAN_TALON_ELEVATOR_BOTTOM);
 
 }
 
@@ -51,13 +55,13 @@ void Elevator::ElevatorStateMachine() {
 
 	case elevate_state:
 
-		Elevate(.5);
+		Elevate(ELEVATE_SPEED);
 
 		break;
 
 	case reverse_state:
 
-		Reverse(.5);
+		Reverse(REVERSE_SPEED);
 
 		break;
 
