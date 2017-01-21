@@ -33,6 +33,7 @@ const int CAN_TALON_KICKER = 57;
 const int JOY_OP = 0;
 const int JOY_THROTTLE = 1;
 const int JOY_WHEEL = 2;
+const int CAN_LIGHT =31;
 
 class DriveController {
 public:

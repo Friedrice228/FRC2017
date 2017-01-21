@@ -16,6 +16,8 @@
 #include <Climber.h>
 #include <TeleopStateMachine.h>
 #include <Autonomous.h>
+#include <LEDLightStrip.h>
+
 
 class Robot: public frc::IterativeRobot {
 public:
@@ -30,6 +32,8 @@ public:
 	TeleopStateMachine *teleop_state_machine;
 	Autonomous *autonomous_;
 	Climber *climber_;
+	LEDLightStrip *light_;
+
 
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
@@ -72,6 +76,8 @@ public:
 		autonomous_ = new Autonomous();
 
 		climber_ = new Climber();
+
+		light_ = new LEDLightStrip();
 
 		teleop_state_machine = new TeleopStateMachine(fly_wheel, conveyor_,
 				gear_rail, elevator_, drive_Controller, vision_, climber_);
@@ -150,6 +156,8 @@ public:
 	}
 
 	void TeleopPeriodic() {
+
+		light_->LEDGreen();
 
 		fly_wheel->FlywheelStateMachine();
 

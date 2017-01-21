@@ -27,6 +27,8 @@ const double CONVERSION_DIVISION = 4096;
 const double CONVERSION_MULTIPLICATION = 600;
 double P_KICK = 0;
 
+
+
 DriveController::DriveController() {
 
 	canTalonFrontLeft = new CANTalon(CAN_TALON_FRONT_LEFT);
