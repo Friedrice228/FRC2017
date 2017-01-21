@@ -8,7 +8,7 @@
 #include <DriveController.h>
 #define PI 3.1415926
 
-using namespace std::chrono_literals;
+using namespace std::chrono;
 
 const double MAX_Y_RPM = 550;
 const double MAX_X_RPM = 2500;
@@ -36,14 +36,7 @@ DriveController::DriveController() {
 	canTalonBackLeft = new CANTalon(22);
 	canTalonBackRight = new CANTalon(24);
 	canTalonFrontRight = new CANTalon(23);
-	canTalonKicker = new CANTalon(27);
-
-	/*robotDrive = new RobotDrive(canTalonFrontLeft, canTalonBackLeft,
-			canTalonFrontRight, canTalonBackRight);
-	robotDrive->SetInvertedMotor(RobotDrive::MotorType::kFrontLeftMotor, true);
-	robotDrive->SetInvertedMotor(RobotDrive::MotorType::kRearLeftMotor, true);
-	robotDrive->SetInvertedMotor(RobotDrive::MotorType::kFrontRightMotor, true);
-	robotDrive->SetInvertedMotor(RobotDrive::MotorType::kRearRightMotor, true);*/
+	canTalonKicker = new CANTalon(57);
 
 	ahrs = new AHRS(SPI::Port::kMXP);
 
@@ -55,7 +48,8 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel,
 bool is_kick) {
 
 	double target_l, target_r, target_kick, target_yaw_rate;
-	double yaw_rate_current = (double) ahrs->GetRawGyroZ() * (double)((PI)/180); //Right is positive angular velocity
+	double yaw_rate_current = (double) ahrs->GetRawGyroZ()
+			* (double) ((PI) / 180); //Right is positive angular velocity
 
 	target_l = JoyThrottle->GetY() * MAX_Y_RPM;
 	target_r = -target_l;
@@ -92,9 +86,12 @@ bool is_kick) {
 
 	}
 
-	double l_current = ((double)canTalonFrontLeft->GetEncVel()/(double)4096) * 600;
-	double r_current = ((double)canTalonFrontRight->GetEncVel()/(double)4096) * 600;
-	double kick_current = -((double)canTalonKicker->GetEncVel()/(double)4096) * 600; //conversion to RPM from native unit
+	double l_current = ((double) canTalonFrontLeft->GetEncVel() / (double) 4096)
+			* 600;
+	double r_current =
+			((double) canTalonFrontRight->GetEncVel() / (double) 4096) * 600;
+	double kick_current =
+			-((double) canTalonKicker->GetEncVel() / (double) 4096) * 600; //conversion to RPM from native unit
 
 	std::cout << "OUTPUT: " << canTalonKicker->Get();
 	std::cout << " CURRRNT: " << kick_current;
@@ -109,9 +106,9 @@ bool is_kick) {
 	P_RIGHT = K_P_RIGHT * r_error;
 	P_KICK = K_P_KICK * kick_error;
 
-	double total_right = P_RIGHT;// + K_F_RIGHT;
+	double total_right = P_RIGHT; // + K_F_RIGHT;
 	double total_left = P_LEFT; //+ K_F_LEFT;
-	double total_kick = P_KICK;// + K_F_KICK;
+	double total_kick = P_KICK; // + K_F_KICK;
 
 	canTalonFrontLeft->Set(total_left);
 	canTalonBackLeft->Set(total_left);
@@ -144,19 +141,19 @@ void DriveController::KickerDown() {
 }
 
 void DriveController::HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel,
-		bool *is_kick, DriveController *driveController) {
+bool *is_kick, DriveController *driveController) {
 
 	while (true) {
 
-		driveController->HDrive(JoyThrottle, JoyWheel, *is_kick);
-
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+		driveController->HDrive(JoyThrottle, JoyWheel, *is_kick);
 
 	}
 }
 
 void DriveController::StartThreads(Joystick *JoyThrottle, Joystick *JoyWheel,
-		bool *is_kick) {
+bool *is_kick) {
 
 	DriveController *dc = this;
 
@@ -164,12 +161,5 @@ void DriveController::StartThreads(Joystick *JoyThrottle, Joystick *JoyWheel,
 			JoyWheel, is_kick, dc);
 	HDriveThread.detach();
 
-
 }
-
-
-
-
-
-
 

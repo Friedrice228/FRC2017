@@ -142,13 +142,29 @@ public:
 
 	void TeleopInit() {
 
-		drive_Controller->StartThreads(joyThrottle, joyWheel, &is_kick);
-		drive_Controller->KickerDown();
+		fly_wheel->StartThread();
+
+	//	drive_Controller->StartThreads(joyThrottle, joyWheel, &is_kick);
+	//	drive_Controller->KickerDown();
 
 	}
 
 	void TeleopPeriodic() {
 
+		fly_wheel->FlywheelStateMachine();
+
+		if (joyThrottle->GetRawButton(8)) {
+
+			fly_wheel->flywheel_state = fly_wheel->spin_state_h;
+
+		}
+
+		else {
+
+			fly_wheel->flywheel_state = fly_wheel->stop_state_h;
+		}
+
+#if 0
 		bool gear_button = joyOp->GetRawButton(5);
 		bool fire_button = joyOp->GetRawButton(6);
 		bool climb_button = joyOp->GetRawButton(7);
@@ -203,7 +219,7 @@ public:
 
 		}
 
-		//END DRIVECODE
+#endif	//END DRIVECODE
 
 	}
 
