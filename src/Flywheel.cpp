@@ -109,8 +109,6 @@ void Flywheel::SpinWrapper(Flywheel *fw, int ref, bool *active) {
 
 	while (true) {
 
-		//std::cout << "off" << *active << std::endl;
-
 		while (*active) {
 
 			std::cout << "on" << std::endl;

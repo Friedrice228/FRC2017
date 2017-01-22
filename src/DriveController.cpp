@@ -7,8 +7,20 @@
 
 #include <DriveController.h>
 
+#define PI 3.1415926
+
 using namespace std::chrono;
 
+const double MAX_Y_RPM = 550;
+const double MAX_X_RPM = 2500;
+const double MAX_YAW_RATE = 20 * ((PI) / 180);
+const double K_P_YAW = 0;
+const int DC_SLEEP_TIME = 10;
+const int CAN_TALON_FRONT_LEFT = 22;
+const int CAN_TALON_BACK_LEFT = 23;
+const int CAN_TALON_BACK_RIGHT = 24;
+const int CAN_TALON_FRONT_RIGHT = 21;
+const int CAN_TALON_KICKER = 57;
 
 double l_error, r_error, kick_error;
 double l_last_error = 0;
@@ -26,8 +38,6 @@ const double K_F_KICK = .02;
 const double CONVERSION_DIVISION = 4096;
 const double CONVERSION_MULTIPLICATION = 600;
 double P_KICK = 0;
-
-
 
 DriveController::DriveController() {
 
@@ -85,12 +95,12 @@ bool is_kick) {
 
 	}
 
-	double l_current = ((double) canTalonFrontLeft->GetEncVel() / (double) CONVERSION_DIVISION)
-			* CONVERSION_MULTIPLICATION;
-	double r_current =
-			((double) canTalonFrontRight->GetEncVel() / (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
-	double kick_current =
-			-((double) canTalonKicker->GetEncVel() / (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION; //conversion to RPM from native unit
+	double l_current = ((double) canTalonFrontLeft->GetEncVel()
+			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
+	double r_current = ((double) canTalonFrontRight->GetEncVel()
+			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
+	double kick_current = -((double) canTalonKicker->GetEncVel()
+			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION; //conversion to RPM from native unit
 
 	std::cout << "OUTPUT: " << canTalonKicker->Get();
 	std::cout << " CURRRNT: " << kick_current;

@@ -18,7 +18,6 @@ const int climbing_state = 6;
 const int finish_climbing = 7;
 int state = init_state;
 
-
 DriveController *drive_Controller;
 Flywheel *fly_wheel;
 Elevator *elevator_;
@@ -27,8 +26,9 @@ Conveyor *conveyor_;
 Vision *vision_;
 Climber *climber_;
 
-TeleopStateMachine::TeleopStateMachine(Flywheel *flywheelP, Conveyor *conveyorP, GearRail *gearRailP,
-		Elevator *elevatorP, DriveController *driveControllerP, Vision *visionP, Climber *climberP) {
+TeleopStateMachine::TeleopStateMachine(Flywheel *flywheelP, Conveyor *conveyorP,
+		GearRail *gearRailP, Elevator *elevatorP,
+		DriveController *driveControllerP, Vision *visionP, Climber *climberP) {
 
 	fly_wheel = flywheelP;
 
@@ -46,13 +46,24 @@ TeleopStateMachine::TeleopStateMachine(Flywheel *flywheelP, Conveyor *conveyorP,
 
 }
 
-void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb, bool is_ret){
+void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
+		bool is_ret, bool is_popcorn) {
 
-	switch(state) {
+	if (is_popcorn) {
+
+		conveyor_->conveyor_state = conveyor_->popcorn_state_h;
+
+	} else {
+
+		conveyor_->conveyor_state = conveyor_->stop_state_h;
+
+	}
+
+	switch (state) {
 
 	case init_state:
 
-		conveyor_->conveyor_state = conveyor_->popcorn_state_h;
+		conveyor_->conveyor_state = conveyor_->stop_state_h;
 
 		gear_rail->gear_rail_state = gear_rail->close_state_h;
 
@@ -64,8 +75,6 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 	case wait_for_button_state: // can only do one thing at a time - sean wanted this
 
-		conveyor_->conveyor_state = conveyor_->popcorn_state_h;
-
 		gear_rail->gear_rail_state = gear_rail->close_state_h;
 
 		elevator_->elevator_state = elevator_->stop_state_h;
@@ -74,16 +83,15 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 			state = open_gear_rails_state;
 
-		}else if (is_fire) {
+		} else if (is_fire) {
 
 			state = init_shooting_state;
 
-		}else if (is_climb) {
+		} else if (is_climb) {
 
 			state = init_climbing;
 
 		}
-
 
 		break;
 
@@ -101,7 +109,7 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 	case init_shooting_state:
 
-		fly_wheel->flywheel_state = fly_wheel->spin_state_h;  //TODO: if flywheel doesn't spin up, then check this
+		fly_wheel->flywheel_state = fly_wheel->spin_state_h; //TODO: if flywheel doesn't spin up, then check this
 
 		if (!is_fire) {
 
@@ -118,11 +126,19 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 	case fire_state:
 
-		conveyor_->conveyor_state = conveyor_->load_state_h;
+		if (is_popcorn) {
+
+			conveyor_->conveyor_state = conveyor_->popcorn_state_h;
+
+		} else {
+
+			conveyor_->conveyor_state = conveyor_->load_state_h;
+
+		}
 
 		elevator_->elevator_state = elevator_->elevate_state_h;
 
-		if(!is_fire) {
+		if (!is_fire) {
 
 			state = wait_for_button_state;
 
@@ -136,10 +152,7 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 		gear_rail->gear_rail_state = gear_rail->close_state_h;
 
-		conveyor_->conveyor_state = conveyor_->stop_state_h;
-
 		fly_wheel->flywheel_state = fly_wheel->stop_state_h;
-
 
 		state = climbing_state;
 
@@ -154,7 +167,7 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 			state = wait_for_button_state;
 		}
 
-		if (climber_->CheckCurrent() >= climber_->MAX_CURRENT){
+		if (climber_->CheckCurrent() >= climber_->MAX_CURRENT) {
 
 			state = finish_climbing;
 
@@ -166,14 +179,13 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 		climber_->climber_state = climber_->stop_state_h;
 
-		if (is_ret){
+		if (is_ret) {
 
 			state = wait_for_button_state;
 
 		}
 
 		break;
-
 
 	}
 

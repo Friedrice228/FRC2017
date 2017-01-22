@@ -16,7 +16,7 @@ public:
 	const int popcorn_state_h = 0;
 	const int load_state_h = 1;
 	const int stop_state_h = 2;
-	int conveyor_state = popcorn_state_h;
+	int conveyor_state = stop_state_h;
 
 	CANTalon *canTalonBack, *canTalonFront;
 

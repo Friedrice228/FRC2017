@@ -18,7 +18,6 @@
 #include <Autonomous.h>
 #include <LEDLightStrip.h>
 
-
 class Robot: public frc::IterativeRobot {
 public:
 
@@ -34,6 +33,18 @@ public:
 	Climber *climber_;
 	LEDLightStrip *light_;
 
+	const int JOY_OP = 1;
+	const int JOY_THROTTLE = 0;
+	const int JOY_WHEEL = 2;
+	const int CAN_LIGHT = 31;
+	const int GEAR_LIGHT_BUTTON = 8;
+	const int BALL_LIGHT_BUTTON = 9;
+	const int GEAR_AND_BALL_LIGHT_BUTTON = 10;
+	const int CLIMB_BUTTON = 4;
+	const int GEAR_BUTTON = 5;
+	const int FIRE_BUTTON = 7;
+	const int RETURN_BUTTON = 3;
+	const int POPCORN_BUTTON = 6;
 
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
@@ -150,36 +161,25 @@ public:
 
 		fly_wheel->StartThread();
 
-	//	drive_Controller->StartThreads(joyThrottle, joyWheel, &is_kick);
-	//	drive_Controller->KickerDown();
+		drive_Controller->StartThreads(joyThrottle, joyWheel, &is_kick);
+		drive_Controller->KickerDown();
 
 	}
 
 	void TeleopPeriodic() {
 
-		light_->LEDGreen();
-
-		fly_wheel->FlywheelStateMachine();
-
-		if (joyThrottle->GetRawButton(RETURN_BUTTON)) {
-
-			fly_wheel->flywheel_state = fly_wheel->spin_state_h;
-
-		}
-
-		else {
-
-			fly_wheel->flywheel_state = fly_wheel->stop_state_h;
-		}
-
-#if 0
 		bool gear_button = joyOp->GetRawButton(GEAR_BUTTON);
 		bool fire_button = joyOp->GetRawButton(FIRE_BUTTON);
 		bool climb_button = joyOp->GetRawButton(CLIMB_BUTTON);
 		bool return_button = joyOp->GetRawButton(RETURN_BUTTON);
+		bool gear_light_button = joyOp->GetRawButton(GEAR_LIGHT_BUTTON);
+		bool ball_light_button = joyOp->GetRawButton(BALL_LIGHT_BUTTON);
+		bool gear_and_ball_light_button = joyOp->GetRawButton(GEAR_AND_BALL_LIGHT_BUTTON);
+		bool popcorn_button = joyOp->GetRawButton(POPCORN_BUTTON);
 
-		teleop_state_machine->StateMachine(gear_button, fire_button,
-				climb_button, return_button);
+		teleop_state_machine->StateMachine(gear_button, fire_button,climb_button, return_button, popcorn_button);
+
+		light_->LEDStateMachine(gear_light_button, ball_light_button, gear_and_ball_light_button);
 		conveyor_->ConStateMachine();
 		elevator_->ElevatorStateMachine();
 		fly_wheel->FlywheelStateMachine();
@@ -227,14 +227,13 @@ public:
 
 		}
 
-#endif	//END DRIVECODE
+		//END DRIVECODE
 
 	}
 
 	void TestPeriodic() {
-		CANTalon *canTalon = new CANTalon(CAN_TALON_BACK_RIGHT);
 
-		std::cout << canTalon->GetEncPosition() << std::endl;
+		//	std::cout << canTalon->GetEncPosition() << std::endl;
 
 	}
 
