@@ -17,6 +17,7 @@ public:
 	const int spin_state_h = 1;
 	int flywheel_state = stop_state_h;
 
+
 	CANTalon *canTalonFlywheelLeft, *canTalonFlywheelRight;
 
 	Flywheel();
@@ -28,7 +29,7 @@ public:
 	void StartThread();
 	static void SpinWrapper(Flywheel *fw, int ref, bool *active);
 	double GetSpeed();
-
+	double FlywheelValue();
 };
 
 #endif

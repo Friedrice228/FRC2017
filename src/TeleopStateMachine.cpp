@@ -5,6 +5,7 @@
  *      Author: DriversStation
  */
 #include <TeleopStateMachine.h>
+#include <iostream>
 
 const std::string maxs_korean_name = "Ku Sung";
 
@@ -71,13 +72,21 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 		state = wait_for_button_state;
 
+		std::cout <<"init"<< std::endl;
+
 		break;
 
 	case wait_for_button_state: // can only do one thing at a time - sean wanted this
 
 		gear_rail->gear_rail_state = gear_rail->close_state_h;
 
+		fly_wheel->flywheel_state = fly_wheel->stop_state_h;
+
 		elevator_->elevator_state = elevator_->stop_state_h;
+
+		climber_->climber_state = climber_->stop_state_h;
+
+		std::cout <<"wait for button"<< std::endl;
 
 		if (is_gear) {
 
@@ -99,6 +108,8 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 		gear_rail->gear_rail_state = gear_rail->open_state_h;
 
+		std::cout <<"gear rails"<< std::endl;
+
 		if (!is_gear) {
 
 			state = wait_for_button_state;
@@ -110,6 +121,10 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 	case init_shooting_state:
 
 		fly_wheel->flywheel_state = fly_wheel->spin_state_h; //TODO: if flywheel doesn't spin up, then check this
+
+		std::cout <<"init shooting"<< std::endl;
+
+		std::cout <<fly_wheel->FlywheelValue()<<std::endl;
 
 		if (!is_fire) {
 
@@ -125,6 +140,8 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 		break;
 
 	case fire_state:
+
+		std::cout <<"fire"<< std::endl;
 
 		if (is_popcorn) {
 
@@ -156,16 +173,20 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 		state = climbing_state;
 
+		std::cout <<"init climbing"<< std::endl;
+
 		break;
 
 	case climbing_state: //hold to climb, release to stop
 
 		climber_->climber_state = climber_->climbing_state_h;
 
+		std::cout <<"climbing"<< std::endl;
+
 		if (!is_climb) {
 
 			state = wait_for_button_state;
-		}
+	}
 
 		if (climber_->CheckCurrent() >= climber_->MAX_CURRENT) {
 
@@ -178,6 +199,9 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 	case finish_climbing:
 
 		climber_->climber_state = climber_->stop_state_h;
+
+		std::cout <<"finish climbing"<< std::endl;
+
 
 		if (is_ret) {
 

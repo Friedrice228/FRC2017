@@ -36,15 +36,17 @@ public:
 	const int JOY_OP = 1;
 	const int JOY_THROTTLE = 0;
 	const int JOY_WHEEL = 2;
+
 	const int CAN_LIGHT = 31;
 	const int GEAR_LIGHT_BUTTON = 8;
 	const int BALL_LIGHT_BUTTON = 9;
 	const int GEAR_AND_BALL_LIGHT_BUTTON = 10;
-	const int CLIMB_BUTTON = 4;
+
+	const int CLIMB_BUTTON = 6;
 	const int GEAR_BUTTON = 5;
 	const int FIRE_BUTTON = 7;
 	const int RETURN_BUTTON = 3;
-	const int POPCORN_BUTTON = 6;
+	const int POPCORN_BUTTON = 4;
 
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
@@ -177,15 +179,17 @@ public:
 		bool gear_and_ball_light_button = joyOp->GetRawButton(GEAR_AND_BALL_LIGHT_BUTTON);
 		bool popcorn_button = joyOp->GetRawButton(POPCORN_BUTTON);
 
-		teleop_state_machine->StateMachine(gear_button, fire_button,climb_button, return_button, popcorn_button);
+		teleop_state_machine->StateMachine(gear_button, fire_button, climb_button, return_button, popcorn_button);
 
 		light_->LEDStateMachine(gear_light_button, ball_light_button, gear_and_ball_light_button);
 		conveyor_->ConStateMachine();
 		elevator_->ElevatorStateMachine();
 		fly_wheel->FlywheelStateMachine();
 		gear_rail->GearRailStateMachine();
+		climber_->ClimberStateMachine();
 
 		//START DRIVE CODE
+
 		const int HDrive = 0;
 		const int Split = 1;
 
@@ -228,7 +232,6 @@ public:
 		}
 
 		//END DRIVECODE
-
 	}
 
 	void TestPeriodic() {

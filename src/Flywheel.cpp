@@ -8,8 +8,10 @@
 
 const int stop_state = 0;
 const int spin_state = 1;
+
 const int GOAL_RPM = 2500;
-const int MAX_FLYWHEEL_ERROR = 0;
+
+const int MAX_FLYWHEEL_ERROR = 100;
 const int CAN_TALON_FLYWHEEL_RIGHT = 27;
 const int CAN_TALON_FLYWHEEL_LEFT = 33;
 const int FLYWHEEL_WAIT_TIME = 10;
@@ -79,6 +81,15 @@ bool Flywheel::IsAtSpeed() {
 
 }
 
+double Flywheel::FlywheelValue() {
+
+	double flywheel_value = -((double) canTalonFlywheelRight->GetEncVel()
+				/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
+
+	return flywheel_value;
+
+}
+
 void Flywheel::FlywheelStateMachine() {
 
 	switch (flywheel_state) {
@@ -111,7 +122,7 @@ void Flywheel::SpinWrapper(Flywheel *fw, int ref, bool *active) {
 
 		while (*active) {
 
-			std::cout << "on" << std::endl;
+		//	std::cout << "on" << std::endl;
 
 			fw->Spin(ref);
 
@@ -119,7 +130,7 @@ void Flywheel::SpinWrapper(Flywheel *fw, int ref, bool *active) {
 
 		}
 
-		std::cout << "off" << std::endl;
+	//	std::cout << "off" << std::endl;
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
 
