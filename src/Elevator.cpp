@@ -10,7 +10,7 @@
 const int stop_state = 0;
 const int elevate_state = 1;
 const int reverse_state = 2;
-const int CAN_TALON_ELEVATOR_TOP = 22;
+const int CAN_TALON_ELEVATOR_TOP = 99;
 const int CAN_TALON_ELEVATOR_BOTTOM = 30;
 const double ELEVATE_SPEED = .5;
 const double REVERSE_SPEED = .5;

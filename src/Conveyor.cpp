@@ -3,8 +3,8 @@
 const int popcorn_state = 0;
 const int load_state = 1;
 const int stop_state = 2;
-const int CAN_TALON_FRONT = 23;
-const int CAN_TALON_BACK = 29;
+const int CAN_TALON_FRONT = 77;
+const int CAN_TALON_BACK = 78;
 const double POPCORN_SPEED = .5;
 const double LOAD_SPEED = .5;
 

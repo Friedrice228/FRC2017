@@ -51,10 +51,10 @@ public:
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
 
-	const std::string gearPlacementUsualAuton = "Gear Placement Usual";
-	const std::string gearPlacementAlternateAuton = "Gear Placement Alternate";
-	const std::string shootAuton = "Shoot";
-	const std::string shootAndLoadAuton = "Shoot and Load";
+	const std::string gearPlacementUsualAuton = "Gear Placement Usual"; //gear to middle position
+	const std::string gearPlacementAlternateAuton = "Gear Placement Alternate"; //gear to side position
+	const std::string shootAuton = "Shoot"; //shoot with pre-loaded balls
+	const std::string shootAndLoadAuton = "Shoot and Load"; //get balls from hopper, then shoot
 
 	const std::string redAlliance = "Red Alliance";
 	const std::string blueAlliance = "Blue Alliance";

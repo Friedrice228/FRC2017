@@ -5,6 +5,7 @@
 
 class Autonomous {
 public:
+
 	Autonomous();
 
 	void GearPlacementUsualAuton();

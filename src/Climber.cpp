@@ -9,7 +9,7 @@
 
 const int stop_state = 0;
 const int climbing_state = 1;
-const int CAN_TALON_CLIMBER_RIGHT = 26;
+const int CAN_TALON_CLIMBER_RIGHT = 55;
 const int CAN_TALON_CLIMBER_LEFT = 41;
 const double CLIMBING_SPEED = .5;
 

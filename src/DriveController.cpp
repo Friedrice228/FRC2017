@@ -16,9 +16,9 @@ const double MAX_X_RPM = 2500;
 const double MAX_YAW_RATE = 20 * ((PI) / 180);
 const double K_P_YAW = 0;
 const int DC_SLEEP_TIME = 10;
-const int CAN_TALON_FRONT_LEFT = 22; //elevator
-const int CAN_TALON_BACK_LEFT = 23; //conveyor
-const int CAN_TALON_BACK_RIGHT = 24;
+const int CAN_TALON_FRONT_LEFT = 24;
+const int CAN_TALON_BACK_LEFT = 23;
+const int CAN_TALON_BACK_RIGHT = 22;
 const int CAN_TALON_FRONT_RIGHT = 21;
 const int CAN_TALON_KICKER = 57;
 
