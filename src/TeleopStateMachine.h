@@ -12,6 +12,7 @@
 #include <Conveyor.h>
 #include <Vision.h>
 #include <Climber.h>
+#include <SmartDashboard/SmartDashboard.h>
 
 #ifndef TELEOPSTATEMACHINE_H_
 #define TELEOPSTATEMACHINE_H_

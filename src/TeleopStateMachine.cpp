@@ -64,6 +64,8 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 	case init_state:
 
+		SmartDashboard::PutString("State ", "Init State");
+
 		conveyor_->conveyor_state = conveyor_->stop_state_h;
 
 		gear_rail->gear_rail_state = gear_rail->close_state_h;
@@ -193,6 +195,7 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 			state = finish_climbing;
 
 		}
+
 
 		break;
 
