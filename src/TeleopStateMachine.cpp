@@ -48,7 +48,17 @@ TeleopStateMachine::TeleopStateMachine(Flywheel *flywheelP, Conveyor *conveyorP,
 }
 
 void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
-		bool is_ret, bool is_popcorn) {
+bool is_ret, bool is_popcorn, bool second_fire_button) {
+
+	if (fly_wheel->IsAtSpeed()) {
+
+		SmartDashboard::PutBoolean("At Speed", true);
+
+	} else {
+
+		SmartDashboard::PutBoolean("At Speed", false);
+
+	}
 
 	if (is_popcorn) {
 
@@ -60,27 +70,35 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 	}
 
+	if (is_gear) {
+
+		gear_rail->gear_rail_state = gear_rail->open_state_h;
+
+	} else {
+
+		gear_rail->gear_rail_state = gear_rail->close_state_h;
+	}
+
+	//START SWITCH
 	switch (state) {
 
 	case init_state:
 
-		SmartDashboard::PutString("State ", "Init State");
+		SmartDashboard::PutString("State", "Initial");
 
 		conveyor_->conveyor_state = conveyor_->stop_state_h;
-
-		gear_rail->gear_rail_state = gear_rail->close_state_h;
 
 		elevator_->elevator_state = elevator_->stop_state_h;
 
 		state = wait_for_button_state;
 
-		std::cout <<"init"<< std::endl;
+		std::cout << "init" << std::endl;
 
 		break;
 
 	case wait_for_button_state: // can only do one thing at a time - sean wanted this
 
-		gear_rail->gear_rail_state = gear_rail->close_state_h;
+		SmartDashboard::PutString("State", "Wait For Button");
 
 		fly_wheel->flywheel_state = fly_wheel->stop_state_h;
 
@@ -88,13 +106,9 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 		climber_->climber_state = climber_->stop_state_h;
 
-		std::cout <<"wait for button"<< std::endl;
+		std::cout << "wait for button" << std::endl;
 
-		if (is_gear) {
-
-			state = open_gear_rails_state;
-
-		} else if (is_fire) {
+		if (is_fire) {
 
 			state = init_shooting_state;
 
@@ -106,27 +120,15 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 		break;
 
-	case open_gear_rails_state:
-
-		gear_rail->gear_rail_state = gear_rail->open_state_h;
-
-		std::cout <<"gear rails"<< std::endl;
-
-		if (!is_gear) {
-
-			state = wait_for_button_state;
-
-		}
-
-		break;
-
 	case init_shooting_state:
+
+		SmartDashboard::PutString("State", "Initial Shooting");
 
 		fly_wheel->flywheel_state = fly_wheel->spin_state_h; //TODO: if flywheel doesn't spin up, then check this
 
-		std::cout <<"init shooting"<< std::endl;
+		std::cout << "init shooting" << std::endl;
 
-		std::cout <<fly_wheel->FlywheelValue()<<std::endl;
+		std::cout << fly_wheel->FlywheelValue() << std::endl;
 
 		if (!is_fire) {
 
@@ -134,7 +136,7 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 		}
 
-		if (fly_wheel->IsAtSpeed()) {
+		if (fly_wheel->IsAtSpeed() && second_fire_button) {
 
 			state = fire_state;
 		}
@@ -143,7 +145,9 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 	case fire_state:
 
-		std::cout <<"fire"<< std::endl;
+		SmartDashboard::PutString("State", "Fire");
+
+		std::cout << "fire" << std::endl;
 
 		if (is_popcorn) {
 
@@ -167,28 +171,30 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 	case init_climbing:
 
-		elevator_->elevator_state = elevator_->stop_state_h;
+		SmartDashboard::PutString("State", "Initial Climbing");
 
-		gear_rail->gear_rail_state = gear_rail->close_state_h;
+		elevator_->elevator_state = elevator_->stop_state_h;
 
 		fly_wheel->flywheel_state = fly_wheel->stop_state_h;
 
 		state = climbing_state;
 
-		std::cout <<"init climbing"<< std::endl;
+		std::cout << "init climbing" << std::endl;
 
 		break;
 
 	case climbing_state: //hold to climb, release to stop
 
+		SmartDashboard::PutString("State", "Climbing");
+
 		climber_->climber_state = climber_->climbing_state_h;
 
-		std::cout <<"climbing"<< std::endl;
+		std::cout << "climbing" << std::endl;
 
 		if (!is_climb) {
 
 			state = wait_for_button_state;
-	}
+		}
 
 		if (climber_->CheckCurrent() >= climber_->MAX_CURRENT) {
 
@@ -196,15 +202,15 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 
 		}
 
-
 		break;
 
 	case finish_climbing:
 
+		SmartDashboard::PutString("State", "Finish Climbing");
+
 		climber_->climber_state = climber_->stop_state_h;
 
-		std::cout <<"finish climbing"<< std::endl;
-
+		std::cout << "finish climbing" << std::endl;
 
 		if (is_ret) {
 
@@ -215,6 +221,7 @@ void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
 		break;
 
 	}
+	//END SWITCH
 
 }
 

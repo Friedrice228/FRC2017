@@ -27,47 +27,77 @@ bool active_;
 
 Flywheel::Flywheel() {
 
-	canTalonFlywheelRight = new CANTalon(CAN_TALON_FLYWHEEL_RIGHT);
-	canTalonFlywheelRight->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
-	canTalonFlywheelRight->SetF(RIGHT_F_GAIN);
-	canTalonFlywheelRight->SetP(RIGHT_P_GAIN);
-	canTalonFlywheelRight->ConfigNominalOutputVoltage(+2.0f, -0.0f);
-	canTalonFlywheelRight->ConfigPeakOutputVoltage(+12.0f, +2.0f);
-	canTalonFlywheelRight->SetSensorDirection(true);
-	canTalonFlywheelRight->SelectProfileSlot(0);
+	canTalonFlywheelFrontRight = new CANTalon(CAN_TALON_FLYWHEEL_RIGHT);
 
-	canTalonFlywheelLeft = new CANTalon(CAN_TALON_FLYWHEEL_LEFT);
-	canTalonFlywheelLeft->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
-	canTalonFlywheelLeft->SetF(LEFT_F_GAIN);
-	canTalonFlywheelLeft->SetP(LEFT_P_GAIN);
-	canTalonFlywheelLeft->ConfigNominalOutputVoltage(+2.0f, -0.0f);
-	canTalonFlywheelLeft->ConfigPeakOutputVoltage(+12.0f, +2.0f);
-	canTalonFlywheelLeft->SetSensorDirection(true);
-	canTalonFlywheelLeft->SelectProfileSlot(0);
+	canTalonFlywheelFrontRight->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
+	canTalonFlywheelFrontRight->SetF(RIGHT_F_GAIN);
+	canTalonFlywheelFrontRight->SetP(RIGHT_P_GAIN);
+	canTalonFlywheelFrontRight->ConfigNominalOutputVoltage(+2.0f, -0.0f);
+	canTalonFlywheelFrontRight->ConfigPeakOutputVoltage(+12.0f, +2.0f);
+	canTalonFlywheelFrontRight->SetSensorDirection(true);
+	canTalonFlywheelFrontRight->SelectProfileSlot(0);
+
+	canTalonFlywheelFrontLeft = new CANTalon(CAN_TALON_FLYWHEEL_LEFT);
+
+	canTalonFlywheelFrontLeft->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
+	canTalonFlywheelFrontLeft->SetF(LEFT_F_GAIN);
+	canTalonFlywheelFrontLeft->SetP(LEFT_P_GAIN);
+	canTalonFlywheelFrontLeft->ConfigNominalOutputVoltage(+2.0f, -0.0f);
+	canTalonFlywheelFrontLeft->ConfigPeakOutputVoltage(+12.0f, +2.0f);
+	canTalonFlywheelFrontLeft->SetSensorDirection(true);
+	canTalonFlywheelFrontLeft->SelectProfileSlot(0);
+
+	canTalonFlywheelBackLeft = new CANTalon(CAN_TALON_FLYWHEEL_LEFT);
+
+	canTalonFlywheelBackLeft->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
+	canTalonFlywheelBackLeft->SetF(LEFT_F_GAIN);
+	canTalonFlywheelBackLeft->SetP(LEFT_P_GAIN);
+	canTalonFlywheelBackLeft->ConfigNominalOutputVoltage(+2.0f, -0.0f);
+	canTalonFlywheelBackLeft->ConfigPeakOutputVoltage(+12.0f, +2.0f);
+	canTalonFlywheelBackLeft->SetSensorDirection(true);
+	canTalonFlywheelBackLeft->SelectProfileSlot(0);
+
+	canTalonFlywheelBackRight = new CANTalon(CAN_TALON_FLYWHEEL_LEFT);
+
+	canTalonFlywheelBackRight->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
+	canTalonFlywheelBackRight->SetF(LEFT_F_GAIN);
+	canTalonFlywheelBackRight->SetP(LEFT_P_GAIN);
+	canTalonFlywheelBackRight->ConfigNominalOutputVoltage(+2.0f, -0.0f);
+	canTalonFlywheelBackRight->ConfigPeakOutputVoltage(+12.0f, +2.0f);
+	canTalonFlywheelBackRight->SetSensorDirection(true);
+	canTalonFlywheelBackRight->SelectProfileSlot(0);
 
 	active_ = false;
 }
 
 void Flywheel::Spin(int ref) {
 
-	canTalonFlywheelRight->SetControlMode(CANSpeedController::kSpeed);
-	canTalonFlywheelRight->Set(ref);
+	canTalonFlywheelFrontRight->SetControlMode(CANSpeedController::kSpeed);
+	canTalonFlywheelFrontRight->Set(ref);
 
-	canTalonFlywheelLeft->SetControlMode(CANSpeedController::kSpeed);
-	canTalonFlywheelLeft->Set(ref);
+	canTalonFlywheelFrontLeft->SetControlMode(CANSpeedController::kSpeed);
+	canTalonFlywheelFrontLeft->Set(ref);
+
+	canTalonFlywheelBackRight->SetControlMode(CANSpeedController::kSpeed);
+	canTalonFlywheelBackRight->Set(ref);
+
+	canTalonFlywheelBackLeft->SetControlMode(CANSpeedController::kSpeed);
+	canTalonFlywheelBackLeft->Set(ref);
 
 }
 
 void Flywheel::Stop() {
 
-	canTalonFlywheelRight->Set(0);
-	canTalonFlywheelLeft->Set(0);
+	canTalonFlywheelFrontRight->Set(0);
+	canTalonFlywheelFrontLeft->Set(0);
+	canTalonFlywheelBackRight->Set(0);
+	canTalonFlywheelBackLeft->Set(0);
 
 }
 // current speed target speed variable
 bool Flywheel::IsAtSpeed() {
 
-	double flywheel_value = -((double) canTalonFlywheelRight->GetEncVel()
+	double flywheel_value = -((double) canTalonFlywheelFrontRight->GetEncVel()
 			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
 
 	if (abs(flywheel_value - GOAL_RPM) < MAX_FLYWHEEL_ERROR) {
@@ -83,8 +113,8 @@ bool Flywheel::IsAtSpeed() {
 
 double Flywheel::FlywheelValue() {
 
-	double flywheel_value = -((double) canTalonFlywheelRight->GetEncVel()
-				/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
+	double flywheel_value = -((double) canTalonFlywheelFrontRight->GetEncVel()
+			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
 
 	return flywheel_value;
 
@@ -113,7 +143,8 @@ void Flywheel::FlywheelStateMachine() {
 
 double Flywheel::GetSpeed() {
 
-	return -((double) canTalonFlywheelRight->GetEncVel() / (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
+	return -((double) canTalonFlywheelFrontRight->GetEncVel()
+			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
 }
 
 void Flywheel::SpinWrapper(Flywheel *fw, int ref, bool *active) {
@@ -122,17 +153,19 @@ void Flywheel::SpinWrapper(Flywheel *fw, int ref, bool *active) {
 
 		while (*active) {
 
-		//	std::cout << "on" << std::endl;
+			//	std::cout << "on" << std::endl;
 
 			fw->Spin(ref);
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
+			std::this_thread::sleep_for(
+					std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
 
 		}
 
-	//	std::cout << "off" << std::endl;
+		//	std::cout << "off" << std::endl;
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
+		std::this_thread::sleep_for(
+				std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
 
 	}
 

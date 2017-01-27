@@ -47,6 +47,7 @@ public:
 	const int FIRE_BUTTON = 7;
 	const int RETURN_BUTTON = 3;
 	const int POPCORN_BUTTON = 4;
+	const int FIRE_BUTTON_2 = 10;
 
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
@@ -178,8 +179,9 @@ public:
 		bool ball_light_button = joyOp->GetRawButton(BALL_LIGHT_BUTTON);
 		bool gear_and_ball_light_button = joyOp->GetRawButton(GEAR_AND_BALL_LIGHT_BUTTON);
 		bool popcorn_button = joyOp->GetRawButton(POPCORN_BUTTON);
+		bool second_fire_button = joyOp->GetRawButton(FIRE_BUTTON_2);
 
-		teleop_state_machine->StateMachine(gear_button, fire_button, climb_button, return_button, popcorn_button);
+		teleop_state_machine->StateMachine(gear_button, fire_button, climb_button, return_button, popcorn_button, second_fire_button);
 
 		light_->LEDStateMachine(gear_light_button, ball_light_button, gear_and_ball_light_button);
 		conveyor_->ConStateMachine();
