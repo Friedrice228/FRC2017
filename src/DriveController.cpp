@@ -102,10 +102,10 @@ bool is_kick) {
 	double kick_current = -((double) canTalonKicker->GetEncVel()
 			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION; //conversion to RPM from native unit
 
-	std::cout << "OUTPUT: " << canTalonKicker->Get();
-	std::cout << " CURRRNT: " << kick_current;
-	std::cout << " ERRK: " << kick_error;
-	std::cout << " TARGET: " << target_kick << std::endl;
+	//std::cout << "OUTPUT: " << canTalonKicker->Get();
+	//std::cout << " CURRRNT: " << kick_current;
+	//std::cout << " ERRK: " << kick_error;
+	//std::cout << " TARGET: " << target_kick << std::endl;
 
 	l_error = target_l - l_current;
 	r_error = target_r - r_current;

@@ -183,7 +183,7 @@ public:
 
 		teleop_state_machine->StateMachine(gear_button, fire_button, climb_button, return_button, popcorn_button, second_fire_button);
 
-		light_->LEDStateMachine(gear_light_button, ball_light_button, gear_and_ball_light_button);
+	//	light_->LEDStateMachine(gear_light_button, ball_light_button, gear_and_ball_light_button);
 		conveyor_->ConStateMachine();
 		elevator_->ElevatorStateMachine();
 		fly_wheel->FlywheelStateMachine();
@@ -236,13 +236,14 @@ public:
 		//END DRIVECODE
 	}
 
-	void TestPeriodic() {
+
+///	void TestPeriodic() {
 
 		//	std::cout << canTalon->GetEncPosition() << std::endl;
 
-	}
+	//}
 
-private:
+//private:
 
 };
 

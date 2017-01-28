@@ -11,9 +11,11 @@ const int spin_state = 1;
 
 const int GOAL_RPM = 2500;
 
-const int MAX_FLYWHEEL_ERROR = 100;
-const int CAN_TALON_FLYWHEEL_RIGHT = 27;
-const int CAN_TALON_FLYWHEEL_LEFT = 33;
+const int MAX_FLYWHEEL_ERROR = 300;
+const int CAN_TALON_FLYWHEEL_FRONT_RIGHT = 27;
+const int CAN_TALON_FLYWHEEL_BACK_RIGHT = 41;
+const int CAN_TALON_FLYWHEEL_FRONT_LEFT = 33;
+const int CAN_TALON_FLYWHEEL_BACK_LEFT = 40;
 const int FLYWHEEL_WAIT_TIME = 10;
 
 const double RIGHT_F_GAIN = 0.025;
@@ -27,7 +29,7 @@ bool active_;
 
 Flywheel::Flywheel() {
 
-	canTalonFlywheelFrontRight = new CANTalon(CAN_TALON_FLYWHEEL_RIGHT);
+	canTalonFlywheelFrontRight = new CANTalon(CAN_TALON_FLYWHEEL_FRONT_RIGHT);
 
 	canTalonFlywheelFrontRight->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
 	canTalonFlywheelFrontRight->SetF(RIGHT_F_GAIN);
@@ -37,7 +39,7 @@ Flywheel::Flywheel() {
 	canTalonFlywheelFrontRight->SetSensorDirection(true);
 	canTalonFlywheelFrontRight->SelectProfileSlot(0);
 
-	canTalonFlywheelFrontLeft = new CANTalon(CAN_TALON_FLYWHEEL_LEFT);
+	canTalonFlywheelFrontLeft = new CANTalon(CAN_TALON_FLYWHEEL_FRONT_LEFT);
 
 	canTalonFlywheelFrontLeft->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
 	canTalonFlywheelFrontLeft->SetF(LEFT_F_GAIN);
@@ -47,7 +49,7 @@ Flywheel::Flywheel() {
 	canTalonFlywheelFrontLeft->SetSensorDirection(true);
 	canTalonFlywheelFrontLeft->SelectProfileSlot(0);
 
-	canTalonFlywheelBackLeft = new CANTalon(CAN_TALON_FLYWHEEL_LEFT);
+	canTalonFlywheelBackLeft = new CANTalon(CAN_TALON_FLYWHEEL_BACK_LEFT);
 
 	canTalonFlywheelBackLeft->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
 	canTalonFlywheelBackLeft->SetF(LEFT_F_GAIN);
@@ -57,7 +59,7 @@ Flywheel::Flywheel() {
 	canTalonFlywheelBackLeft->SetSensorDirection(true);
 	canTalonFlywheelBackLeft->SelectProfileSlot(0);
 
-	canTalonFlywheelBackRight = new CANTalon(CAN_TALON_FLYWHEEL_LEFT);
+	canTalonFlywheelBackRight = new CANTalon(CAN_TALON_FLYWHEEL_BACK_RIGHT);
 
 	canTalonFlywheelBackRight->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
 	canTalonFlywheelBackRight->SetF(LEFT_F_GAIN);
