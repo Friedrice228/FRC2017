@@ -201,6 +201,7 @@ public:
 		const int HDrive = 0;
 		const int Split = 1;
 
+
 		bool hDrive = joyThrottle->GetRawButton(1);
 		bool arcadeDrive = joyThrottle->GetRawButton(2);
 

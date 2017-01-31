@@ -11,16 +11,16 @@
 
 using namespace std::chrono;
 
-const double MAX_Y_RPM = 250; //A guess
+const double MAX_Y_RPM = 450;
 const double MAX_X_RPM = 100; //Also a guess
-const double MAX_YAW_RATE = 20 * ((PI) / 180);
+const double MAX_YAW_RATE = (17.8/502) * MAX_Y_RPM;
 
 const int DC_SLEEP_TIME = 10;
 
 const int CAN_TALON_FRONT_LEFT = 27;
 const int CAN_TALON_BACK_LEFT = 14;
 const int CAN_TALON_BACK_RIGHT = 13;
-const int CAN_TALON_FRONT_RIGHT = 11;
+const int CAN_TALON_FRONT_RIGHT = 11;//17.8
 const int CAN_TALON_KICKER = 12;
 
 double l_error, r_error, kick_error;
@@ -28,15 +28,16 @@ double l_last_error = 0;
 double r_last_error = 0;
 double kick_last_error = 0;
 
-const double K_P_YAW = 0;
+const double K_P_YAW = -50; // need to invert the yaw direction
 
-const double K_P_LEFT = 0.0035; // 0.0035 has oscillation on ground
-const double K_F_LEFT = 0; // 0.1 too low
+const double K_P_LEFT = 0.0005; // 0.0035 has oscillation on ground big
+const double K_F_LEFT = 1.0/502.0; // 0.1 too low
 double P_LEFT = 0;
 
-const double K_P_RIGHT = 0.0035; //0.004 too big wheels off the ground (250 RPM) / 0.001 too small / 0.003 too small still (300 RPM) / 0.0035 small (300)
-const double K_F_RIGHT = 0.0; // 0.1 too low
+const double K_P_RIGHT = 0.0005; //0.004 too big wheels off the ground (250 RPM) / 0.001 too small / 0.003 too small still (300 RPM) / 0.0035 small (300) / 0.003 big
+const double K_F_RIGHT = 1.0/502.0;
 double P_RIGHT = 0;
+
 
 const double K_P_KICK = .0;
 const double K_F_KICK = .0;
@@ -65,14 +66,14 @@ bool is_kick) {
 	double target_l, target_r, target_kick, target_yaw_rate;
 	double yaw_rate_current = (double) ahrs->GetRawGyroZ() * (double) ((PI) / 180); //Right is positive angular velocity
 
-	target_l = JoyThrottle->GetY() * MAX_Y_RPM;
-	target_r = -target_l;
+	target_l = -1.0 * JoyThrottle->GetY() * MAX_Y_RPM;
+	target_r = target_l; //-
 
 	target_kick = JoyThrottle->GetX() * MAX_X_RPM * (bool) is_kick;
 
 	target_yaw_rate = JoyWheel->GetX() * MAX_YAW_RATE;
 
-	target_l = target_l + (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
+	target_l = target_l + (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE)); //-
 	target_r = target_r - (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
 
 	double yaw_error = yaw_rate_current - target_yaw_rate;
@@ -100,8 +101,11 @@ bool is_kick) {
 
 	}
 
+	double feed_forward_r = K_F_RIGHT * target_r;
+	double feed_forward_l = K_F_LEFT * target_l;
+
 	 //conversion to RPM from native unit
-	double l_current = -((double) canTalonFrontLeft->GetEncVel()
+	double l_current = ((double) canTalonFrontLeft->GetEncVel() //-
 			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
 	double r_current = -((double) canTalonFrontRight->GetEncVel()
 			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
@@ -116,20 +120,27 @@ bool is_kick) {
 	P_RIGHT = K_P_RIGHT * r_error;
 	P_KICK = K_P_KICK * kick_error;
 
-	double total_right = P_RIGHT + K_F_RIGHT;
-	double total_left = P_LEFT + K_F_LEFT;
+	double total_right = P_RIGHT + feed_forward_r;
+	double total_left = P_LEFT + feed_forward_l;
 	double total_kick = P_KICK + K_F_KICK;
 
-	canTalonFrontLeft->Set(total_left);
-	canTalonBackLeft->Set(total_left);
+	canTalonFrontLeft->Set(-total_left);
+	canTalonBackLeft->Set(-total_left);
 	canTalonFrontRight->Set(total_right);
 	canTalonBackRight->Set(total_right);
 	canTalonKicker->Set(total_kick);
 
-	std::cout << "OUTPUT: " << canTalonFrontLeft->Get();
-	std::cout << " CURRRNT: " << l_current;
-	std::cout << " ERRK: " << l_error;
-	std::cout << " TARGET: " << target_l << std::endl;
+//	std::cout << "OUTPUT: " << canTalonFrontLeft->Get();
+//	std::cout << " CURRRNT: " << l_current;
+//	std::cout << " ERRK: " << l_error;
+	std::cout << " TARGET R : " << target_r << std::endl;
+	std::cout << " TARGET L : " << target_l << std::endl;
+
+	std::cout << "Vel: " <<  yaw_rate_current;// << std::endl;
+
+//	std::cout << "Left " << ((double) canTalonFrontLeft->GetEncVel() / (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;// << std::endl;
+//	std::cout << "Right " << ((double) canTalonFrontRight->GetEncVel() / (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION << std::endl;
+
 
 }
 
