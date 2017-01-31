@@ -3,7 +3,7 @@
 #include <string>
 #include <thread>
 
-#include "WPILib.h"
+#include <WPILib.h>
 #include <IterativeRobot.h>
 #include <LiveWindow/LiveWindow.h>
 #include <SmartDashboard/SendableChooser.h>
@@ -17,6 +17,8 @@
 #include <TeleopStateMachine.h>
 #include <Autonomous.h>
 #include <LEDLightStrip.h>
+
+
 
 class Robot: public frc::IterativeRobot {
 public:
@@ -62,6 +64,8 @@ public:
 
 	std::string autoSelected;
 	std::string allianceSelected;
+
+	const std::string version = "1.0";
 
 	const int HDrive = 0;
 	const int Split = 1;
@@ -112,7 +116,7 @@ public:
 
 		is_kick = true;
 
-	}
+	}// RobotInit
 
 	void AutonomousInit() override {
 
@@ -162,15 +166,17 @@ public:
 
 	void TeleopInit() {
 
-		fly_wheel->StartThread();
+	//	fly_wheel->StartThread();
 
 		drive_Controller->StartThreads(joyThrottle, joyWheel, &is_kick);
 		drive_Controller->KickerDown();
+
 
 	}
 
 	void TeleopPeriodic() {
 
+#if 0
 		bool gear_button = joyOp->GetRawButton(GEAR_BUTTON);
 		bool fire_button = joyOp->GetRawButton(FIRE_BUTTON);
 		bool climb_button = joyOp->GetRawButton(CLIMB_BUTTON);
@@ -183,13 +189,13 @@ public:
 
 		teleop_state_machine->StateMachine(gear_button, fire_button, climb_button, return_button, popcorn_button, second_fire_button);
 
-	//	light_->LEDStateMachine(gear_light_button, ball_light_button, gear_and_ball_light_button);
+		light_->LEDStateMachine(gear_light_button, ball_light_button, gear_and_ball_light_button);
 		conveyor_->ConStateMachine();
 		elevator_->ElevatorStateMachine();
 		fly_wheel->FlywheelStateMachine();
 		gear_rail->GearRailStateMachine();
 		climber_->ClimberStateMachine();
-
+#endif
 		//START DRIVE CODE
 
 		const int HDrive = 0;
@@ -234,16 +240,18 @@ public:
 		}
 
 		//END DRIVECODE
+
+
+
+	} // TeleopPeriodic
+
+
+	void TestPeriodic() {
+
+
 	}
 
-
-///	void TestPeriodic() {
-
-		//	std::cout << canTalon->GetEncPosition() << std::endl;
-
-	//}
-
-//private:
+private:
 
 };
 

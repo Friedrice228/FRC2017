@@ -11,30 +11,36 @@
 
 using namespace std::chrono;
 
-const double MAX_Y_RPM = 550;
-const double MAX_X_RPM = 2500;
+const double MAX_Y_RPM = 250; //A guess
+const double MAX_X_RPM = 100; //Also a guess
 const double MAX_YAW_RATE = 20 * ((PI) / 180);
-const double K_P_YAW = 0;
+
 const int DC_SLEEP_TIME = 10;
-const int CAN_TALON_FRONT_LEFT = 24;
-const int CAN_TALON_BACK_LEFT = 23;
-const int CAN_TALON_BACK_RIGHT = 22;
-const int CAN_TALON_FRONT_RIGHT = 21;
-const int CAN_TALON_KICKER = 57;
+
+const int CAN_TALON_FRONT_LEFT = 27;
+const int CAN_TALON_BACK_LEFT = 14;
+const int CAN_TALON_BACK_RIGHT = 13;
+const int CAN_TALON_FRONT_RIGHT = 11;
+const int CAN_TALON_KICKER = 12;
 
 double l_error, r_error, kick_error;
 double l_last_error = 0;
 double r_last_error = 0;
 double kick_last_error = 0;
 
-const double K_P_LEFT = 0;
-const double K_F_LEFT = 0;
+const double K_P_YAW = 0;
+
+const double K_P_LEFT = 0.0035; // 0.0035 has oscillation on ground
+const double K_F_LEFT = 0; // 0.1 too low
 double P_LEFT = 0;
-const double K_P_RIGHT = 0;
-const double K_F_RIGHT = 0;
+
+const double K_P_RIGHT = 0.0035; //0.004 too big wheels off the ground (250 RPM) / 0.001 too small / 0.003 too small still (300 RPM) / 0.0035 small (300)
+const double K_F_RIGHT = 0.0; // 0.1 too low
 double P_RIGHT = 0;
-const double K_P_KICK = .00075;
-const double K_F_KICK = .02;
+
+const double K_P_KICK = .0;
+const double K_F_KICK = .0;
+
 const double CONVERSION_DIVISION = 4096;
 const double CONVERSION_MULTIPLICATION = 600;
 double P_KICK = 0;
@@ -57,8 +63,7 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel,
 bool is_kick) {
 
 	double target_l, target_r, target_kick, target_yaw_rate;
-	double yaw_rate_current = (double) ahrs->GetRawGyroZ()
-			* (double) ((PI) / 180); //Right is positive angular velocity
+	double yaw_rate_current = (double) ahrs->GetRawGyroZ() * (double) ((PI) / 180); //Right is positive angular velocity
 
 	target_l = JoyThrottle->GetY() * MAX_Y_RPM;
 	target_r = -target_l;
@@ -95,17 +100,13 @@ bool is_kick) {
 
 	}
 
-	double l_current = ((double) canTalonFrontLeft->GetEncVel()
+	 //conversion to RPM from native unit
+	double l_current = -((double) canTalonFrontLeft->GetEncVel()
 			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
-	double r_current = ((double) canTalonFrontRight->GetEncVel()
+	double r_current = -((double) canTalonFrontRight->GetEncVel()
 			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
 	double kick_current = -((double) canTalonKicker->GetEncVel()
-			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION; //conversion to RPM from native unit
-
-	//std::cout << "OUTPUT: " << canTalonKicker->Get();
-	//std::cout << " CURRRNT: " << kick_current;
-	//std::cout << " ERRK: " << kick_error;
-	//std::cout << " TARGET: " << target_kick << std::endl;
+			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION; //going right is positive
 
 	l_error = target_l - l_current;
 	r_error = target_r - r_current;
@@ -115,15 +116,20 @@ bool is_kick) {
 	P_RIGHT = K_P_RIGHT * r_error;
 	P_KICK = K_P_KICK * kick_error;
 
-	double total_right = P_RIGHT; // + K_F_RIGHT;
-	double total_left = P_LEFT; //+ K_F_LEFT;
-	double total_kick = P_KICK; // + K_F_KICK;
+	double total_right = P_RIGHT + K_F_RIGHT;
+	double total_left = P_LEFT + K_F_LEFT;
+	double total_kick = P_KICK + K_F_KICK;
 
 	canTalonFrontLeft->Set(total_left);
 	canTalonBackLeft->Set(total_left);
 	canTalonFrontRight->Set(total_right);
 	canTalonBackRight->Set(total_right);
 	canTalonKicker->Set(total_kick);
+
+	std::cout << "OUTPUT: " << canTalonFrontLeft->Get();
+	std::cout << " CURRRNT: " << l_current;
+	std::cout << " ERRK: " << l_error;
+	std::cout << " TARGET: " << target_l << std::endl;
 
 }
 

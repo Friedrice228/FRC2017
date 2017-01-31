@@ -155,19 +155,13 @@ void Flywheel::SpinWrapper(Flywheel *fw, int ref, bool *active) {
 
 		while (*active) {
 
-			//	std::cout << "on" << std::endl;
-
 			fw->Spin(ref);
 
-			std::this_thread::sleep_for(
-					std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
+			std::this_thread::sleep_for(std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
 
 		}
 
-		//	std::cout << "off" << std::endl;
-
-		std::this_thread::sleep_for(
-				std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
+		std::this_thread::sleep_for(std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
 
 	}
 
