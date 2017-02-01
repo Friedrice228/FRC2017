@@ -9,11 +9,14 @@ public:
 	Autonomous();
 
 	void GearPlacementUsualAuton();
-	void GearPlacementAlternateAuton();
+	void GearPlacementDriveAuton();
+	void GearPlacementLeft();
+	void GearPlacementRight();
 	void ShootAutonRed();
 	void ShootAutonBlue();
 	void ShootAndLoadAutonBlue();
 	void ShootAndLoadAutonRed();
+
 
 
 };

@@ -15,7 +15,15 @@ void Autonomous::GearPlacementUsualAuton() {
 
 }
 
-void Autonomous::GearPlacementAlternateAuton() {
+void Autonomous::GearPlacementLeft() {
+
+}
+
+void Autonomous::GearPlacementRight() {
+
+}
+
+void Autonomous::GearPlacementDriveAuton() {
 
 }
 

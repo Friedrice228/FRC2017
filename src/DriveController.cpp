@@ -11,9 +11,9 @@
 
 using namespace std::chrono;
 
-const double MAX_Y_RPM = 450;
-const double MAX_X_RPM = 100; //Also a guess
-const double MAX_YAW_RATE = (17.8/502) * MAX_Y_RPM;
+const double MAX_Y_RPM = 480;
+const double MAX_X_RPM = 300; // Max RPM ACTUAL: 330
+const double MAX_YAW_RATE = (17.8/508) * MAX_Y_RPM;//max angular velocity divided by the max rpm multiplied by set max rpm
 
 const int DC_SLEEP_TIME = 10;
 
@@ -28,19 +28,19 @@ double l_last_error = 0;
 double r_last_error = 0;
 double kick_last_error = 0;
 
-const double K_P_YAW = -50; // need to invert the yaw direction
+const double K_P_YAW = -60; // need to invert the yaw direction calculated value
 
 const double K_P_LEFT = 0.0005; // 0.0035 has oscillation on ground big
-const double K_F_LEFT = 1.0/502.0; // 0.1 too low
+const double K_F_LEFT = 1.0/508.0; // 0.1 too low
 double P_LEFT = 0;
 
 const double K_P_RIGHT = 0.0005; //0.004 too big wheels off the ground (250 RPM) / 0.001 too small / 0.003 too small still (300 RPM) / 0.0035 small (300) / 0.003 big
-const double K_F_RIGHT = 1.0/502.0;
+const double K_F_RIGHT = 1.0/508.0;
 double P_RIGHT = 0;
 
 
-const double K_P_KICK = .0;
-const double K_F_KICK = .0;
+const double K_P_KICK = .003;
+const double K_F_KICK = 1.0/330.0;
 
 const double CONVERSION_DIVISION = 4096;
 const double CONVERSION_MULTIPLICATION = 600;
@@ -67,13 +67,13 @@ bool is_kick) {
 	double yaw_rate_current = (double) ahrs->GetRawGyroZ() * (double) ((PI) / 180); //Right is positive angular velocity
 
 	target_l = -1.0 * JoyThrottle->GetY() * MAX_Y_RPM;
-	target_r = target_l; //-
+	target_r = target_l;
 
 	target_kick = JoyThrottle->GetX() * MAX_X_RPM * (bool) is_kick;
 
 	target_yaw_rate = JoyWheel->GetX() * MAX_YAW_RATE;
 
-	target_l = target_l + (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE)); //-
+	target_l = target_l + (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
 	target_r = target_r - (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
 
 	double yaw_error = yaw_rate_current - target_yaw_rate;
@@ -83,6 +83,11 @@ bool is_kick) {
 	target_l += yaw_output;
 	target_r -= yaw_output;
 
+	if (abs(target_kick) < 35) {
+
+		target_kick = 0;
+
+	}
 	if (target_l > MAX_Y_RPM) {
 
 		target_l = MAX_Y_RPM;
@@ -90,6 +95,7 @@ bool is_kick) {
 	} else if (target_l < -MAX_Y_RPM) {
 
 		target_l = -MAX_Y_RPM;
+
 	}
 	if (target_r > MAX_Y_RPM) {
 
@@ -103,13 +109,14 @@ bool is_kick) {
 
 	double feed_forward_r = K_F_RIGHT * target_r;
 	double feed_forward_l = K_F_LEFT * target_l;
+	double feed_forward_k = K_F_KICK * target_kick;
 
 	 //conversion to RPM from native unit
-	double l_current = ((double) canTalonFrontLeft->GetEncVel() //-
+	double l_current = ((double) canTalonFrontLeft->GetEncVel()
 			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
 	double r_current = -((double) canTalonFrontRight->GetEncVel()
 			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
-	double kick_current = -((double) canTalonKicker->GetEncVel()
+	double kick_current = ((double) canTalonKicker->GetEncVel()
 			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION; //going right is positive
 
 	l_error = target_l - l_current;
@@ -122,21 +129,22 @@ bool is_kick) {
 
 	double total_right = P_RIGHT + feed_forward_r;
 	double total_left = P_LEFT + feed_forward_l;
-	double total_kick = P_KICK + K_F_KICK;
+	double total_kick = P_KICK + feed_forward_k;
 
 	canTalonFrontLeft->Set(-total_left);
 	canTalonBackLeft->Set(-total_left);
 	canTalonFrontRight->Set(total_right);
 	canTalonBackRight->Set(total_right);
-	canTalonKicker->Set(total_kick);
+	canTalonKicker->Set(-total_kick);
 
 //	std::cout << "OUTPUT: " << canTalonFrontLeft->Get();
-//	std::cout << " CURRRNT: " << l_current;
-//	std::cout << " ERRK: " << l_error;
-	std::cout << " TARGET R : " << target_r << std::endl;
-	std::cout << " TARGET L : " << target_l << std::endl;
+//	std::cout << " CURRENT: " << l_current;
+//	std::cout << " ERROR: " << l_error;
+//	std::cout << " TARGET R : " << target_r << std::endl;
+//	std::cout << " TARGET L : " << target_l << std::endl;
 
-	std::cout << "Vel: " <<  yaw_rate_current;// << std::endl;
+	std::cout << " TARGET K : " << target_kick << std::endl;
+	std::cout << " CURRENT : " << kick_current << std::endl;
 
 //	std::cout << "Left " << ((double) canTalonFrontLeft->GetEncVel() / (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;// << std::endl;
 //	std::cout << "Right " << ((double) canTalonFrontRight->GetEncVel() / (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION << std::endl;
