@@ -12,6 +12,7 @@
 using namespace std::chrono;
 
 const double MAX_Y_RPM = 480;
+double DYN_MAX_Y_RPM = 480;
 const double MAX_X_RPM = 300; // Max RPM ACTUAL: 330
 const double MAX_YAW_RATE = (17.8/508) * MAX_Y_RPM;//max angular velocity divided by the max rpm multiplied by set max rpm
 
@@ -66,12 +67,22 @@ bool is_kick) {
 	double target_l, target_r, target_kick, target_yaw_rate;
 	double yaw_rate_current = (double) ahrs->GetRawGyroZ() * (double) ((PI) / 180); //Right is positive angular velocity
 
-	target_l = -1.0 * JoyThrottle->GetY() * MAX_Y_RPM;
+	double axis_ratio = 0.0;
+
+	if(JoyThrottle->GetX() != 0){
+		axis_ratio = std::abs(JoyThrottle->GetY()/JoyThrottle->GetX());
+		DYN_MAX_Y_RPM = MAX_X_RPM * (double)axis_ratio;
+		DYN_MAX_Y_RPM = DYN_MAX_Y_RPM > MAX_Y_RPM ? MAX_Y_RPM:DYN_MAX_Y_RPM;
+	} else {
+		DYN_MAX_Y_RPM = MAX_Y_RPM;
+	}
+
+	target_l = -1.0 * (JoyThrottle->GetY() < 0 ? -1:1) *(JoyThrottle->GetY() * JoyThrottle->GetY()) * DYN_MAX_Y_RPM; //(JoyThrottle->GetY() < 0 ? -1:1)
 	target_r = target_l;
 
-	target_kick = JoyThrottle->GetX() * MAX_X_RPM * (bool) is_kick;
+	target_kick = (JoyThrottle->GetX() < 0 ? -1:1) * (JoyThrottle->GetX() * JoyThrottle->GetX()) * MAX_X_RPM * (bool) is_kick;
 
-	target_yaw_rate = JoyWheel->GetX() * MAX_YAW_RATE;
+	target_yaw_rate = (JoyWheel->GetX()) * MAX_YAW_RATE;
 
 	target_l = target_l + (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
 	target_r = target_r - (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
@@ -143,8 +154,10 @@ bool is_kick) {
 //	std::cout << " TARGET R : " << target_r << std::endl;
 //	std::cout << " TARGET L : " << target_l << std::endl;
 
-	std::cout << " TARGET K : " << target_kick << std::endl;
-	std::cout << " CURRENT : " << kick_current << std::endl;
+	std::cout << "Ratio " << axis_ratio <<std::endl;
+
+//	std::cout << " TARGET K : " << target_kick << std::endl;
+//	std::cout << " CURRENT : " << kick_current << std::endl;
 
 //	std::cout << "Left " << ((double) canTalonFrontLeft->GetEncVel() / (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;// << std::endl;
 //	std::cout << "Right " << ((double) canTalonFrontRight->GetEncVel() / (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION << std::endl;

@@ -11,6 +11,7 @@
 #include <AHRS.h>
 #include <thread>
 #include <chrono>
+#include <cmath>
 
 #ifndef SRC_DRIVECONTROLLER_H_
 #define SRC_DRIVECONTROLLER_H_
