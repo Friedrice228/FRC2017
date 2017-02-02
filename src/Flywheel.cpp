@@ -27,10 +27,13 @@ const double CONVERSION_MULTIPLICATION = 600;
 
 bool active_;
 
+double flywheel_time = 0.01;
+
+Timer *timerFly = new Timer();
+
 Flywheel::Flywheel() {
 
 	canTalonFlywheelFrontRight = new CANTalon(CAN_TALON_FLYWHEEL_FRONT_RIGHT);
-
 	canTalonFlywheelFrontRight->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
 	canTalonFlywheelFrontRight->SetF(RIGHT_F_GAIN);
 	canTalonFlywheelFrontRight->SetP(RIGHT_P_GAIN);
@@ -39,35 +42,18 @@ Flywheel::Flywheel() {
 	canTalonFlywheelFrontRight->SetSensorDirection(true);
 	canTalonFlywheelFrontRight->SelectProfileSlot(0);
 
+	//Set all other motors as slaves that will follow the output of the master
 	canTalonFlywheelFrontLeft = new CANTalon(CAN_TALON_FLYWHEEL_FRONT_LEFT);
-
-	canTalonFlywheelFrontLeft->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
-	canTalonFlywheelFrontLeft->SetF(LEFT_F_GAIN);
-	canTalonFlywheelFrontLeft->SetP(LEFT_P_GAIN);
-	canTalonFlywheelFrontLeft->ConfigNominalOutputVoltage(+2.0f, -0.0f);
-	canTalonFlywheelFrontLeft->ConfigPeakOutputVoltage(+12.0f, +2.0f);
-	canTalonFlywheelFrontLeft->SetSensorDirection(true);
-	canTalonFlywheelFrontLeft->SelectProfileSlot(0);
+	canTalonFlywheelFrontLeft->SetControlMode(CANSpeedController::kFollower);
+	canTalonFlywheelFrontLeft->Set(CAN_TALON_FLYWHEEL_FRONT_RIGHT);
 
 	canTalonFlywheelBackLeft = new CANTalon(CAN_TALON_FLYWHEEL_BACK_LEFT);
-
-	canTalonFlywheelBackLeft->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
-	canTalonFlywheelBackLeft->SetF(LEFT_F_GAIN);
-	canTalonFlywheelBackLeft->SetP(LEFT_P_GAIN);
-	canTalonFlywheelBackLeft->ConfigNominalOutputVoltage(+2.0f, -0.0f);
-	canTalonFlywheelBackLeft->ConfigPeakOutputVoltage(+12.0f, +2.0f);
-	canTalonFlywheelBackLeft->SetSensorDirection(true);
-	canTalonFlywheelBackLeft->SelectProfileSlot(0);
+	canTalonFlywheelBackLeft->SetControlMode(CANSpeedController::kFollower);
+	canTalonFlywheelBackLeft->Set(CAN_TALON_FLYWHEEL_FRONT_RIGHT);
 
 	canTalonFlywheelBackRight = new CANTalon(CAN_TALON_FLYWHEEL_BACK_RIGHT);
-
-	canTalonFlywheelBackRight->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
-	canTalonFlywheelBackRight->SetF(LEFT_F_GAIN);
-	canTalonFlywheelBackRight->SetP(LEFT_P_GAIN);
-	canTalonFlywheelBackRight->ConfigNominalOutputVoltage(+2.0f, -0.0f);
-	canTalonFlywheelBackRight->ConfigPeakOutputVoltage(+12.0f, +2.0f);
-	canTalonFlywheelBackRight->SetSensorDirection(true);
-	canTalonFlywheelBackRight->SelectProfileSlot(0);
+	canTalonFlywheelBackRight->SetControlMode(CANSpeedController::kFollower);
+	canTalonFlywheelBackRight->Set(CAN_TALON_FLYWHEEL_FRONT_RIGHT);
 
 	active_ = false;
 }
@@ -77,23 +63,12 @@ void Flywheel::Spin(int ref) {
 	canTalonFlywheelFrontRight->SetControlMode(CANSpeedController::kSpeed);
 	canTalonFlywheelFrontRight->Set(ref);
 
-	canTalonFlywheelFrontLeft->SetControlMode(CANSpeedController::kSpeed);
-	canTalonFlywheelFrontLeft->Set(ref);
-
-	canTalonFlywheelBackRight->SetControlMode(CANSpeedController::kSpeed);
-	canTalonFlywheelBackRight->Set(ref);
-
-	canTalonFlywheelBackLeft->SetControlMode(CANSpeedController::kSpeed);
-	canTalonFlywheelBackLeft->Set(ref);
 
 }
 
 void Flywheel::Stop() {
 
 	canTalonFlywheelFrontRight->Set(0);
-	canTalonFlywheelFrontLeft->Set(0);
-	canTalonFlywheelBackRight->Set(0);
-	canTalonFlywheelBackLeft->Set(0);
 
 }
 // current speed target speed variable
@@ -151,13 +126,19 @@ double Flywheel::GetSpeed() {
 
 void Flywheel::SpinWrapper(Flywheel *fw, int ref, bool *active) {
 
+	timerFly->Start();
+
 	while (true) {
 
 		while (*active) {
 
-			fw->Spin(ref);
-
 			std::this_thread::sleep_for(std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
+
+			if (timerFly->HasPeriodPassed(flywheel_time)){
+
+				fw->Spin(ref);
+
+			}
 
 		}
 

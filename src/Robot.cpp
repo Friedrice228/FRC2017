@@ -3,6 +3,7 @@
 #include <string>
 #include <thread>
 
+#include <time.h>
 #include <WPILib.h>
 #include <IterativeRobot.h>
 #include <LiveWindow/LiveWindow.h>
@@ -23,7 +24,7 @@
 class Robot: public frc::IterativeRobot {
 public:
 
-	DriveController *drive_Controller;
+	DriveController *drive_controller;
 	Joystick *joyOp, *joyThrottle, *joyWheel;
 	Flywheel *fly_wheel;
 	Elevator *elevator_;
@@ -73,13 +74,15 @@ public:
 
 	bool is_kick;
 
+	double total = 0;
+
 	void RobotInit() {
 
 		joyOp = new Joystick(JOY_OP);
 		joyThrottle = new Joystick(JOY_THROTTLE);
 		joyWheel = new Joystick(JOY_WHEEL);
 
-		drive_Controller = new DriveController();
+		drive_controller = new DriveController();
 
 		fly_wheel = new Flywheel();
 
@@ -98,7 +101,7 @@ public:
 		light_ = new LEDLightStrip();
 
 		teleop_state_machine = new TeleopStateMachine(fly_wheel, conveyor_,
-				gear_rail, elevator_, drive_Controller, vision_, climber_);
+				gear_rail, elevator_, drive_controller, vision_, climber_);
 
 		autonChooser.AddDefault(gearPlacementUsualAuton,
 				gearPlacementUsualAuton);
@@ -124,53 +127,58 @@ public:
 
 		allianceSelected = allianceChooser.GetSelected();
 
+		drive_controller->ZeroEncs();
+
 	}
 
 	void AutonomousPeriodic() {
+//
+//		if (autoSelected == gearPlacementUsualAuton) {
+//
+//			std::cout << "Auto 1" << std::endl;
+//
+//		} else if (autoSelected == gearPlacementAlternateAuton) {
+//
+//			std::cout << "Auto 2" << std::endl;
+//
+//		} else if (autoSelected == shootAuton) {
+//
+//			if (allianceSelected == redAlliance) {
+//
+//				std::cout << "Red" << std::endl;
+//
+//			} else {
+//
+//				std::cout << "Blue" << std::endl;
+//
+//			}
+//
+//		} else if (autoSelected == shootAndLoadAuton) {
+//
+//			if (allianceSelected == redAlliance) {
+//
+//				std::cout << "Red" << std::endl;
+//
+//			} else {
+//
+//				std::cout << "Blue" << std::endl;
+//
+//			}
+//
+//		}
 
-		if (autoSelected == gearPlacementUsualAuton) {
 
-			std::cout << "Auto 1" << std::endl;
+		drive_controller->DrivePID(10.0);
 
-		} else if (autoSelected == gearPlacementAlternateAuton) {
-
-			std::cout << "Auto 2" << std::endl;
-
-		} else if (autoSelected == shootAuton) {
-
-			if (allianceSelected == redAlliance) {
-
-				std::cout << "Red" << std::endl;
-
-			} else {
-
-				std::cout << "Blue" << std::endl;
-
-			}
-
-		} else if (autoSelected == shootAndLoadAuton) {
-
-			if (allianceSelected == redAlliance) {
-
-				std::cout << "Red" << std::endl;
-
-			} else {
-
-				std::cout << "Blue" << std::endl;
-
-			}
-
-		}
 
 	}
 
 	void TeleopInit() {
 
-	//	fly_wheel->StartThread();
+		fly_wheel->StartThread(); //starts the speed controller
 
-		drive_Controller->StartThreads(joyThrottle, joyWheel, &is_kick);
-		drive_Controller->KickerDown();
-
+		drive_controller->StartThreads(joyThrottle, joyWheel, &is_kick); //starts the drive code
+		drive_controller->KickerDown();
 
 	}
 
@@ -196,8 +204,9 @@ public:
 		gear_rail->GearRailStateMachine();
 		climber_->ClimberStateMachine();
 #endif
-		//START DRIVE CODE
 
+
+		//START DRIVE CODE
 		const int HDrive = 0;
 		const int Split = 1;
 
@@ -207,30 +216,30 @@ public:
 
 		switch (driveMode) {
 
-		case HDrive: //HDRIVE
+		case HDrive:
 
 			is_kick = true;
 
 			if (arcadeDrive) {
 
-				drive_Controller->StopAll();
+				drive_controller->StopAll();
 
-				drive_Controller->KickerUp();
+				drive_controller->KickerDown(); //Kicker to stay down the whole time
 
-				driveMode = Split; //Split = 1;
+				driveMode = Split;
 			}
 
 			break;
 
-		case Split: //SPLIT
+		case Split: //same as HDrive for now, set is_kick to false in this state and use KickerUp() in the if of HDrive state to use split arcade
 
-			is_kick = false;
+			is_kick = true;  //false /New plan to only use HDrive
 
 			if (hDrive) {
 
-				drive_Controller->StopAll();
+				drive_controller->StopAll();
 
-				drive_Controller->KickerDown();
+				drive_controller->KickerDown();
 
 				driveMode = HDrive;
 
@@ -239,9 +248,7 @@ public:
 			break;
 
 		}
-
 		//END DRIVECODE
-
 
 
 	} // TeleopPeriodic

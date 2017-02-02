@@ -6,6 +6,7 @@
  */
 #include <WPILib.h>
 #include <CANTalon.h>
+#include <Timer.h>
 
 #ifndef SRC_FLYWHEEL_H_
 #define SRC_FLYWHEEL_H_

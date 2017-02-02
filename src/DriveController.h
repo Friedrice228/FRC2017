@@ -12,6 +12,7 @@
 #include <thread>
 #include <chrono>
 #include <cmath>
+#include <Timer.h>
 
 #ifndef SRC_DRIVECONTROLLER_H_
 #define SRC_DRIVECONTROLLER_H_
@@ -31,8 +32,11 @@ public:
 	void StopAll();
 	void StartThreads(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_kick);
 	void EndThreads();
+	void DrivePID(double ref);
+	void HeadingPID(double ref);
 	void KickerUp();
 	void KickerDown();
+	void ZeroEncs();
 	static void HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_kick, DriveController *driveController);
 };
 
