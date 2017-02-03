@@ -32,30 +32,35 @@ double l_last_error = 0;
 double r_last_error = 0;
 double kick_last_error = 0;
 
-const double K_P_YAW = -60; // need to invert the yaw direction calculated value
-const double K_P_YAW_DIS = -60;
+const double K_P_YAW = -75; // need to invert the yaw direction calculated value
+
+const double K_P_YAW_DIS = -90;
+const double K_I_YAW_DIS = 0.025;
 
 const double K_P_LEFT_VEL = 0.0005; // 0.0035 has oscillation on ground big
 const double K_F_LEFT_VEL = 1.0 / 508.0; // 0.1 too low
-double P_LEFT_VEL = 0;
+double P_LEFT_VEL_T = 0; // T is for teleop
+double P_LEFT_VEL_AU = 0; // AU is for auton
 
 const double K_P_RIGHT_VEL = 0.0005; //0.004 too big wheels off the ground (250 RPM) / 0.001 too small / 0.003 too small still (300 RPM) / 0.0035 small (300) / 0.003 big
 const double K_F_RIGHT_VEL = 1.0 / 508.0;
-double P_RIGHT_VEL = 0;
+double P_RIGHT_VEL_T = 0;
+double P_RIGHT_VEL_AU = 0;
 
 const double K_P_KICK_VEL = .003;
 const double K_F_KICK_VEL = 1.0 / 330.0;
-double P_KICK_VEL = 0;
+double P_KICK_VEL_T = 0;
+double P_KICK_VEL_AU = 0;
 
 const double CONVERSION_DIVISION = 4096;
 const double CONVERSION_MULTIPLICATION = 600;
 
-const double K_P_RIGHT_DIS = 0.5;
-const double K_P_LEFT_DIS = 0.5;
+const double K_P_RIGHT_DIS = 0.1;
+const double K_P_LEFT_DIS = 0.1;
 const double K_P_KICKER_DIS = 0;
 
-const double K_I_RIGHT_DIS = 0;
-const double K_I_LEFT_DIS = 0;
+const double K_I_RIGHT_DIS = 0.0002;
+const double K_I_LEFT_DIS = 0.0002;
 const double K_I_KICKER_DIS = 0;
 
 const double K_D_RIGHT_DIS = 0;
@@ -69,6 +74,8 @@ double D_RIGHT_DIS = 0;
 double d_right = 0;
 double i_right = 0;
 
+double i_yaw_dis = 0;
+
 double P_LEFT_DIS = 0;
 double I_LEFT_DIS = 0;
 double D_LEFT_DIS = 0;
@@ -76,10 +83,15 @@ double D_LEFT_DIS = 0;
 double d_left = 0;
 double i_left = 0;
 
-double l_error_vel = 0;
-double l_error_dis = 0;
-double r_error_vel = 0;
-double r_error_dis = 0;
+double l_error_vel_au = 0;
+double l_error_dis_au = 0;
+double r_error_vel_au = 0;
+double r_error_dis_au = 0;
+
+double l_error_vel_t = 0;
+double l_error_dis_t = 0;
+double r_error_vel_t = 0;
+double r_error_dis_t = 0;
 
 double timetokeep = 0.01;
 
@@ -116,13 +128,10 @@ bool is_kick) {
 		DYN_MAX_Y_RPM = MAX_Y_RPM; //deals with special case tht x = 0 (ratio cant divide by zero)
 	}
 
-	target_l = -1.0 * (JoyThrottle->GetY() < 0 ? -1 : 1)
-			* (JoyThrottle->GetY() * JoyThrottle->GetY()) * DYN_MAX_Y_RPM; //if joy value is less than 0 set to -1, otherwise to 1
+	target_l = -1.0 * (JoyThrottle->GetY() < 0 ? -1 : 1)* (JoyThrottle->GetY() * JoyThrottle->GetY()) * DYN_MAX_Y_RPM; //if joy value is less than 0 set to -1, otherwise to 1
 	target_r = target_l;
 
-	target_kick = (JoyThrottle->GetX() < 0 ? -1 : 1)
-			* (JoyThrottle->GetX() * JoyThrottle->GetX()) * MAX_X_RPM
-			* (bool) is_kick; //if joy value is less than 0 set to -1, otherwise to 1
+	target_kick = (JoyThrottle->GetX() < 0 ? -1 : 1)* (JoyThrottle->GetX() * JoyThrottle->GetX()) * MAX_X_RPM * (bool) is_kick; //if joy value is less than 0 set to -1, otherwise to 1
 
 	target_yaw_rate = (JoyWheel->GetX()) * MAX_YAW_RATE;
 
@@ -164,17 +173,17 @@ bool is_kick) {
 	double kick_current = ((double) canTalonKicker->GetEncVel()
 			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION; //going right is positive
 
-	l_error_vel = target_l - l_current;
-	r_error_vel = target_r - r_current;
+	l_error_vel_t = target_l - l_current;
+	r_error_vel_t = target_r - r_current;
 	kick_error_vel = target_kick - kick_current;
 
-	P_LEFT_VEL = K_P_LEFT_VEL * l_error_vel;
-	P_RIGHT_VEL = K_P_RIGHT_VEL * r_error_vel;
-	P_KICK_VEL = K_P_KICK_VEL * kick_error_vel;
+	P_LEFT_VEL_T = K_P_LEFT_VEL * l_error_vel_t;
+	P_RIGHT_VEL_T = K_P_RIGHT_VEL * r_error_vel_t;
+	P_KICK_VEL_T = K_P_KICK_VEL * kick_error_vel;
 
-	double total_right = P_RIGHT_VEL + feed_forward_r;
-	double total_left = P_LEFT_VEL + feed_forward_l;
-	double total_kick = P_KICK_VEL + feed_forward_k;
+	double total_right = P_RIGHT_VEL_T + feed_forward_r;
+	double total_left = P_LEFT_VEL_T + feed_forward_l;
+	double total_kick = P_KICK_VEL_T + feed_forward_k;
 
 	canTalonFrontLeft->Set(-total_left);
 	canTalonBackLeft->Set(-total_left);
@@ -189,32 +198,32 @@ bool is_kick) {
  */
 void DriveController::DrivePID(double ref) {
 
-	double r_dis = (((double)canTalonFrontRight->GetEncPosition() / TICKS_PER_ROT)
-			* (WHEEL_RADIUS * PI) / 12); //feet
+	//conversion to feet
+	double r_dis = (((double)canTalonFrontRight->GetEncPosition() / TICKS_PER_ROT) //(negative)
+			* (WHEEL_RADIUS * PI) / 12);
 	double l_dis = -(((double)canTalonFrontRight->GetEncPosition() / TICKS_PER_ROT)
 			* (WHEEL_RADIUS * PI) / 12);
 
-	l_error_dis = ref + r_dis;
-	r_error_dis = ref - l_dis;
+	l_error_dis_au = ref + r_dis;
+	r_error_dis_au = ref - l_dis;
 
-	std::cout <<"Error: " << l_error_dis;
-	std::cout << " Dist: " << l_dis;
+	std::cout <<"Error L: " << l_error_dis_au;
+	//std::cout <<  " Distance R: " << r_dis << std::endl;
 
-	i_right += (r_error_dis);
-	d_right = (r_error_dis - r_last_error);
 
-	i_left += (l_error_dis);
-	d_left = (l_error_dis - l_last_error);
+	i_right += (r_error_dis_au);
+	d_right = (r_error_dis_au - r_last_error);
 
-	P_RIGHT_DIS = K_P_RIGHT_DIS * r_error_dis;
+	i_left += (l_error_dis_au);
+	d_left = (l_error_dis_au - l_last_error);
+
+	P_RIGHT_DIS = K_P_RIGHT_DIS * r_error_dis_au;
 	I_RIGHT_DIS = K_I_RIGHT_DIS * i_right;
 	D_RIGHT_DIS = K_D_RIGHT_DIS * d_right;
 
-	P_LEFT_DIS = K_P_LEFT_DIS * l_error_dis;
+	P_LEFT_DIS = K_P_LEFT_DIS * l_error_dis_au;
 	I_LEFT_DIS = K_I_LEFT_DIS * i_left;
 	D_LEFT_DIS = K_D_LEFT_DIS * d_left;
-
-	std::cout << " P: " << P_LEFT_DIS << std::endl;
 
 	double total_right = P_RIGHT_DIS + I_RIGHT_DIS + D_RIGHT_DIS;
 	double total_left = P_LEFT_DIS + I_LEFT_DIS + D_LEFT_DIS;
@@ -222,8 +231,7 @@ void DriveController::DrivePID(double ref) {
 	double target_rpm_right = total_right * MAX_Y_RPM;
 	double target_rpm_left = total_left * MAX_Y_RPM;
 
-	double yaw_rate_current = (double) ahrs->GetRawGyroZ()
-			* (double) ((PI) / 180);
+	double yaw_rate_current = (double) ahrs->GetRawGyroZ() * (double) ((PI) / 180);
 
 	double target_yaw_rate = 0.0;
 
@@ -234,10 +242,12 @@ void DriveController::DrivePID(double ref) {
 
 	double yaw_error = yaw_rate_current - target_yaw_rate;
 
-	double yaw_output = K_P_YAW_DIS * yaw_error;
+	i_yaw_dis += yaw_error;
 
-	target_rpm_right += yaw_output;
-	target_rpm_left -= yaw_output;
+	double yaw_output = (K_P_YAW_DIS * yaw_error) + (K_I_YAW_DIS * i_yaw_dis);
+
+	target_rpm_right -= yaw_output;
+	target_rpm_left += yaw_output;
 
 	if (target_rpm_left > MAX_Y_RPM) {
 		target_rpm_left = MAX_Y_RPM;
@@ -260,23 +270,25 @@ void DriveController::DrivePID(double ref) {
 	double r_current = -((double) canTalonFrontRight->GetEncVel()
 			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
 
-	l_error_vel = target_rpm_left - l_current;
-	r_error_vel = target_rpm_right - r_current;
+	l_error_vel_au = target_rpm_left - l_current;
+	r_error_vel_au = target_rpm_right - r_current;
 
-	P_LEFT_VEL = K_P_LEFT_VEL * l_error_vel;
-	P_RIGHT_VEL = K_P_RIGHT_VEL * r_error_vel;
-	P_KICK_VEL = K_P_KICK_VEL * kick_error_vel;
+	P_LEFT_VEL_AU = K_P_LEFT_VEL * l_error_vel_au;
+	P_RIGHT_VEL_AU = K_P_RIGHT_VEL * r_error_vel_au;
+	P_KICK_VEL_AU = K_P_KICK_VEL * kick_error_vel;
 
-	total_right = feed_forward_r + P_RIGHT_VEL;
-	total_left = feed_forward_l + P_LEFT_VEL;
+	double total_right_vel = feed_forward_r + P_RIGHT_VEL_AU;
+	double total_left_vel = feed_forward_l + P_LEFT_VEL_AU;
 
-	canTalonFrontLeft->Set(-total_left);
-	canTalonBackLeft->Set(-total_left);
-	canTalonFrontRight->Set(total_right);
-	canTalonBackRight->Set(total_right);
+	canTalonFrontLeft->Set(-total_left_vel);
+	canTalonBackLeft->Set(-total_left_vel);
+	canTalonFrontRight->Set(total_right_vel);
+	canTalonBackRight->Set(total_right_vel);
 
-	l_last_error = l_error_dis;
-	r_last_error = r_error_dis;
+	std::cout << " TOTAL: " << -total_left_vel << std::endl;
+
+	l_last_error = l_error_dis_au;
+	r_last_error = r_error_dis_au;
 
 }
 
@@ -324,7 +336,7 @@ bool *is_kick, DriveController *driveController) {
 
 	timer->Start();
 
-	while (true) {
+	while (!frc::RobotState::IsAutonomous()) {
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(DC_SLEEP_TIME));
 
