@@ -128,6 +128,10 @@ public:
 		allianceSelected = allianceChooser.GetSelected();
 
 		drive_controller->ZeroEncs();
+		drive_controller->ZeroI();
+
+		drive_controller->SetRef(20.0);
+		drive_controller->StartAutonThreads();
 
 	}
 
@@ -168,8 +172,6 @@ public:
 //		}
 
 
-		drive_controller->DrivePID(10.0);
-
 
 	}
 
@@ -177,7 +179,7 @@ public:
 
 		fly_wheel->StartThread(); //starts the speed controller
 
-		drive_controller->StartThreads(joyThrottle, joyWheel, &is_kick); //starts the drive code
+		drive_controller->StartTeleopThreads(joyThrottle, joyWheel, &is_kick); //starts the drive code
 		drive_controller->KickerDown();
 
 	}
