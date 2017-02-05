@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <fstream>
 
 #include <time.h>
 #include <WPILib.h>
@@ -130,10 +131,29 @@ public:
 		drive_controller->ZeroEncs();
 		drive_controller->ZeroI();
 
-		double refs[3] = {20.0, 20.0, 0.0};
+		double refs[200][5];  //l,r,k
 
-		drive_controller->SetRef(refs);
-		drive_controller->StartAutonThreads();
+		int r = 0;
+		std::string data;
+		std::ifstream file ("MotionProfile.csv");
+		while (std::getline(file, data)){
+
+			int i = 0;
+			while (i < 5){
+
+				std::getline(file, data, ',');
+				refs[r][i] = std::stod(data);
+
+				i++;
+
+			}
+			r++;
+		}
+
+		//drive_controller->SetRef(refs);
+		//drive_controller->StartAutonThreads();
+
+		std::cout << refs[0][0] << std::endl;
 
 	}
 
@@ -183,6 +203,7 @@ public:
 
 		drive_controller->StartTeleopThreads(joyThrottle, joyWheel, &is_heading); //starts the drive code
 		drive_controller->KickerDown();
+
 
 	}
 

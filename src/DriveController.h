@@ -33,15 +33,15 @@ public:
 	void StartTeleopThreads(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading);
 	void StartAutonThreads();
 	void EndThreads();
-	void Drive(double ref_kick, double ref_right, double ref_left, double ref_yaw, double k_p_right, double k_p_left, double k_p_kick, double k_p_yaw, double k_d_yaw);
-	void DrivePID(double refRight, double refLeft, double refKick);
+	void Drive(double ref_kick, double ref_right, double ref_left, double ref_yaw, double k_p_right, double k_p_left, double k_p_kick, double k_p_yaw, double k_d_yaw, double target_vel);
+	void DrivePID();
 	void HeadingPID(Joystick *joyWheel);
 	void KickerUp();
 	void KickerDown();
 	void ZeroEncs();
 	void ZeroI();
 	static void DrivePIDWrapper(DriveController *driveController);
-	void SetRef(double refs[3]);
+	void SetRef(double refs[][]);
 	double GetRef();
 	static void HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading, DriveController *driveController);
 };
