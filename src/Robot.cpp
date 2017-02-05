@@ -72,7 +72,7 @@ public:
 	const int Split = 1;
 	int driveMode = HDrive; //0 = HDRIVE 1 = split
 
-	bool is_kick;
+	bool is_heading;
 
 	double total = 0;
 
@@ -117,7 +117,7 @@ public:
 
 		frc::SmartDashboard::PutData("Alliance", &allianceChooser);
 
-		is_kick = true;
+		is_heading = false;
 
 	}// RobotInit
 
@@ -130,7 +130,9 @@ public:
 		drive_controller->ZeroEncs();
 		drive_controller->ZeroI();
 
-		drive_controller->SetRef(20.0);
+		double refs[3] = {20.0, 20.0, 0.0};
+
+		drive_controller->SetRef(refs);
 		drive_controller->StartAutonThreads();
 
 	}
@@ -179,7 +181,7 @@ public:
 
 		fly_wheel->StartThread(); //starts the speed controller
 
-		drive_controller->StartTeleopThreads(joyThrottle, joyWheel, &is_kick); //starts the drive code
+		drive_controller->StartTeleopThreads(joyThrottle, joyWheel, &is_heading); //starts the drive code
 		drive_controller->KickerDown();
 
 	}
@@ -210,34 +212,34 @@ public:
 
 		//START DRIVE CODE
 		const int HDrive = 0;
-		const int Split = 1;
+		const int Heading = 1;
 
-
-		bool hDrive = joyThrottle->GetRawButton(1);
-		bool arcadeDrive = joyThrottle->GetRawButton(2);
+		bool headingDrive = joyThrottle->GetRawButton(2);
 
 		switch (driveMode) {
 
 		case HDrive:
 
-			is_kick = true;
+			is_heading = false;
 
-			if (arcadeDrive) {
+			if (headingDrive) {
 
 				drive_controller->StopAll();
 
 				drive_controller->KickerDown(); //Kicker to stay down the whole time
 
-				driveMode = Split;
+				drive_controller->ahrs->ZeroYaw();
+
+				driveMode = Heading;
 			}
 
 			break;
 
-		case Split: //same as HDrive for now, set is_kick to false in this state and use KickerUp() in the if of HDrive state to use split arcade
+		case Heading:
 
-			is_kick = true;  //false /New plan to only use HDrive
+			is_heading = true;
 
-			if (hDrive) {
+			if (!headingDrive) {
 
 				drive_controller->StopAll();
 

@@ -27,33 +27,29 @@ const int CAN_TALON_BACK_RIGHT = 23;
 const int CAN_TALON_FRONT_RIGHT = 21;
 const int CAN_TALON_KICKER = 22;
 
-double kick_error_vel;
 double l_last_error = 0;
 double r_last_error = 0;
 double yaw_last_error = 0;
 double kick_last_error = 0;
 
-const double K_P_YAW_T = 60; // need to invert the yaw direction calculated value
+const double K_P_YAW_T = 55; // need to invert the yaw direction calculated value
 
 const double K_P_YAW_AU = 70;
 const double K_D_YAW_AU = 80;
 
-const double K_P_YAW_HEADING = 0;
+const double K_P_YAW_HEADING = 8.668;
 
-const double K_P_LEFT_VEL = 0.0008; // 0.0035 has oscillation on ground big
+const double K_P_LEFT_VEL = 0.0014; // 0.0035 has oscillation on ground big
 const double K_F_LEFT_VEL = 1.0 / 508.0; // 0.1 too low
-double P_LEFT_VEL_T = 0; // T is for teleop
-double P_LEFT_VEL_AU = 0; // AU is for auton
+double P_LEFT_VEL = 0;
 
-const double K_P_RIGHT_VEL = 0.0008; //0.004 too big wheels off the ground (250 RPM) / 0.001 too small / 0.003 too small still (300 RPM) / 0.0035 small (300) / 0.003 big
+const double K_P_RIGHT_VEL = 0.0014; //0.004 too big wheels off the ground (250 RPM) / 0.001 too small / 0.003 too small still (300 RPM) / 0.0035 small (300) / 0.003 big
 const double K_F_RIGHT_VEL = 1.0 / 508.0;
-double P_RIGHT_VEL_T = 0;
-double P_RIGHT_VEL_AU = 0;
+double P_RIGHT_VEL = 0;
 
 const double K_P_KICK_VEL = .003;
 const double K_F_KICK_VEL = 1.0 / 330.0;
-double P_KICK_VEL_T = 0;
-double P_KICK_VEL_AU = 0;
+double P_KICK_VEL = 0;
 
 const double CONVERSION_DIVISION = 4096;
 const double CONVERSION_MULTIPLICATION = 600;
@@ -62,8 +58,8 @@ const double K_P_RIGHT_DIS = 0.45;
 const double K_P_LEFT_DIS = 0.45;
 const double K_P_KICKER_DIS = 0;
 
-const double K_I_RIGHT_DIS = 0.000;//5;
-const double K_I_LEFT_DIS = 0.000;//5;
+const double K_I_RIGHT_DIS = 0.000; //5;
+const double K_I_LEFT_DIS = 0.000; //5;
 const double K_I_KICKER_DIS = 0;
 
 const double K_D_RIGHT_DIS = 0.0;
@@ -74,6 +70,14 @@ double P_RIGHT_DIS = 0;
 double I_RIGHT_DIS = 0;
 double D_RIGHT_DIS = 0;
 
+double P_LEFT_DIS = 0;
+double I_LEFT_DIS = 0;
+double D_LEFT_DIS = 0;
+
+double P_KICK_DIS = 0;
+double I_KICK_DIS = 0;
+double D_KICK_DIS = 0;
+
 double d_right = 0;
 double i_right = 0;
 
@@ -82,9 +86,8 @@ double d_yaw_dis = 0;
 double d_left = 0;
 double i_left = 0;
 
-double P_LEFT_DIS = 0;
-double I_LEFT_DIS = 0;
-double D_LEFT_DIS = 0;
+double d_kick = 0;
+double i_kick = 0;
 
 double P_HEADING = 0;
 
@@ -94,15 +97,19 @@ double l_error_dis_au = 0;
 double r_error_vel_au = 0;
 double r_error_dis_au = 0;
 
+double k_error_dis_au = 0;
+
 double l_error_vel_t = 0;
 double l_error_dis_t = 0;
 
 double r_error_vel_t = 0;
 double r_error_dis_t = 0;
 
+double kick_error_vel = 0;
+
 double timetokeep = 0.01;
 
-double drive_ref = 0;
+double drive_ref[3];
 
 double acceptable_yaw_error = .22;
 
@@ -123,8 +130,7 @@ DriveController::DriveController() {
 
 }
 
-void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel, //finds targets
-		bool is_kick) {
+void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) {
 
 	double target_l, target_r, target_kick, target_yaw_rate;
 	double yaw_rate_current = (double) ahrs->GetRawGyroZ()
@@ -145,26 +151,9 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel, //finds 
 	target_r = target_l;
 
 	target_kick = (JoyThrottle->GetX() < 0 ? -1 : 1)
-			* (JoyThrottle->GetX() * JoyThrottle->GetX()) * MAX_X_RPM
-			* (bool) is_kick; //if joy value is less than 0 set to -1, otherwise to 1
+			* (JoyThrottle->GetX() * JoyThrottle->GetX()) * MAX_X_RPM; //if joy value is less than 0 set to -1, otherwise to 1
 
 	target_yaw_rate = (JoyWheel->GetX()) * MAX_YAW_RATE;
-
-	target_l = target_l + (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
-	target_r = target_r - (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
-
-	double yaw_error = target_yaw_rate - yaw_rate_current;
-
-	if (std::abs(yaw_error) < acceptable_yaw_error) {
-
-		yaw_error = 0;
-
-	}
-
-	double yaw_output = K_P_YAW_T * yaw_error;
-
-	target_l += yaw_output;
-	target_r -= yaw_output;
 
 	if (abs(target_kick) < 35) {
 		target_kick = 0;
@@ -182,25 +171,30 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel, //finds 
 		target_r = -MAX_Y_RPM;
 	}
 
-	Drive(target_kick, target_r, target_l, K_P_RIGHT_VEL, K_P_LEFT_VEL,
-			K_P_KICK_VEL);
+	Drive(target_kick, target_r, target_l, target_yaw_rate, K_P_RIGHT_VEL,
+			K_P_LEFT_VEL, K_P_KICK_VEL, K_P_YAW_T, 0.0);
 
 }
 
 /*
  * Param: Feet forward, + forward
  */
-void DriveController::DrivePID(double ref) {
+void DriveController::DrivePID(double refRight, double refLeft,
+		double refKick) {
 
 	//conversion to feet
 	double r_dis = (((double) canTalonFrontRight->GetEncPosition()
 			/ TICKS_PER_ROT) //(negative)
 	* (WHEEL_RADIUS * PI) / 12);
-	double l_dis = -(((double) canTalonFrontRight->GetEncPosition()
+	double l_dis = -(((double) canTalonFrontLeft->GetEncPosition()
 			/ TICKS_PER_ROT) * (WHEEL_RADIUS * PI) / 12);
 
-	l_error_dis_au = ref + r_dis;
-	r_error_dis_au = ref - l_dis;
+	double k_dis = -(((double) canTalonKicker->GetEncPosition() / TICKS_PER_ROT)
+			* (WHEEL_RADIUS * PI) / 12);
+
+	l_error_dis_au = refLeft + l_dis;
+	r_error_dis_au = refRight - r_dis;
+	k_error_dis_au = refKick - k_dis;
 
 	std::cout << "Error L: " << l_error_dis_au;
 
@@ -210,6 +204,9 @@ void DriveController::DrivePID(double ref) {
 	i_left += (l_error_dis_au);
 	d_left = (l_error_dis_au - l_last_error);
 
+	i_kick += (k_error_dis_au);
+	d_kick = (k_error_dis_au - kick_last_error);
+
 	P_RIGHT_DIS = K_P_RIGHT_DIS * r_error_dis_au;
 	I_RIGHT_DIS = K_I_RIGHT_DIS * i_right;
 	D_RIGHT_DIS = K_D_RIGHT_DIS * d_right;
@@ -218,36 +215,17 @@ void DriveController::DrivePID(double ref) {
 	I_LEFT_DIS = K_I_LEFT_DIS * i_left;
 	D_LEFT_DIS = K_D_LEFT_DIS * d_left;
 
+	P_KICK_DIS = K_P_KICKER_DIS * k_error_dis_au;
+	I_KICK_DIS = K_I_KICKER_DIS * i_kick;
+	D_KICK_DIS = K_D_KICKER_DIS * d_right;
+
 	double total_right = P_RIGHT_DIS + I_RIGHT_DIS + D_RIGHT_DIS;
 	double total_left = P_LEFT_DIS + I_LEFT_DIS + D_LEFT_DIS;
+	double total_kick = P_KICK_DIS + I_KICK_DIS + D_KICK_DIS;
 
 	double target_rpm_right = total_right * MAX_Y_RPM;
 	double target_rpm_left = total_left * MAX_Y_RPM;
-
-	double yaw_rate_current = (double) ahrs->GetRawGyroZ()
-			* (double) ((PI) / 180);
-
-	double target_yaw_rate = 0.0;
-
-	target_rpm_left = target_rpm_left
-			+ (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
-	target_rpm_right = target_rpm_right
-			- (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
-
-	double yaw_error = target_yaw_rate - yaw_rate_current;
-
-	if (std::abs(yaw_error) < acceptable_yaw_error) {
-
-		yaw_error = 0;
-
-	}
-
-	d_yaw_dis = yaw_error - yaw_last_error;
-
-	double yaw_output = ((K_P_YAW_AU * yaw_error) + (K_D_YAW_AU * d_yaw_dis));
-
-	target_rpm_right -= yaw_output;
-	target_rpm_left += yaw_output;
+	double target_rpm_kick = total_kick * MAX_X_RPM;
 
 	if (target_rpm_left > MAX_Y_RPM) {
 		target_rpm_left = MAX_Y_RPM;
@@ -261,13 +239,12 @@ void DriveController::DrivePID(double ref) {
 		target_rpm_right = -MAX_Y_RPM;
 	}
 
-	Drive(0, target_rpm_right, target_rpm_left, K_P_RIGHT_VEL, K_P_LEFT_VEL,
-			K_P_KICK_VEL);
+	Drive(target_rpm_kick, target_rpm_right, target_rpm_left, 0, K_P_RIGHT_VEL,
+			K_P_LEFT_VEL, K_P_KICK_VEL, K_P_YAW_AU, K_D_YAW_AU);
 
 	l_last_error = l_error_dis_au;
 	r_last_error = r_error_dis_au;
-
-	yaw_last_error = yaw_error;
+	kick_last_error = k_error_dis_au;
 
 }
 
@@ -276,16 +253,54 @@ void DriveController::DrivePID(double ref) {
  */
 void DriveController::HeadingPID(Joystick *joyWheel) {
 
-	double target_heading = joyWheel->GetX() * 90;
+	double target_heading = joyWheel->GetX() * (90.0 * PI / 180.0);
 
-	double current_heading = (ahrs->GetAngle() < 0 ? -ahrs->GetAngle() : ahrs->GetAngle());
+	double current_heading = ahrs->GetYaw() * ( PI / 180.0);
 
 	double error_heading = target_heading - current_heading;
+
+	double total_heading = K_P_YAW_HEADING * error_heading;
+
+	if (total_heading > MAX_YAW_RATE){
+		total_heading = MAX_YAW_RATE;
+	}else if (total_heading < -MAX_YAW_RATE){
+		total_heading = -MAX_YAW_RATE;
+	}
+
+	std::cout << "Error Angle: " << error_heading;
+	std::cout << " Ref Angle: " << target_heading;
+	std::cout << " Total Speed: " << total_heading;
+	std::cout << " Current angle: " << current_heading << std::endl;
+
+	Drive(0.0, 0.0, 0.0, total_heading, K_P_RIGHT_VEL, K_P_LEFT_VEL,
+			K_P_KICK_VEL, K_P_YAW_T, 0.0);
 
 }
 
 void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
-		double k_p_right, double k_p_left, double k_p_kick) {
+		double ref_yaw, double k_p_right, double k_p_left, double k_p_kick,
+		double k_p_yaw, double k_d_yaw) {
+
+	double yaw_rate_current = (double) ahrs->GetRawGyroZ()
+			* (double) ((PI) / 180);
+
+	double target_yaw_rate = ref_yaw;
+
+	ref_left = ref_left + (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
+	ref_right = ref_right - (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
+
+	double yaw_error = target_yaw_rate - yaw_rate_current;
+
+	if (std::abs(yaw_error) < .22) {
+		yaw_error = 0;
+	}
+
+	d_yaw_dis = yaw_error - yaw_last_error;
+
+	double yaw_output = ((k_p_yaw * yaw_error) + (k_d_yaw * d_yaw_dis));
+
+	ref_right -= yaw_output;
+	ref_left += yaw_output;
 
 	if (abs(ref_kick) < 35) {
 		ref_kick = 0;
@@ -319,13 +334,13 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 	r_error_vel_t = ref_right - r_current;
 	kick_error_vel = ref_kick - kick_current;
 
-	P_LEFT_VEL_T = k_p_left * l_error_vel_t;
-	P_RIGHT_VEL_T = k_p_right * r_error_vel_t;
-	P_KICK_VEL_T = k_p_kick * kick_error_vel;
+	P_LEFT_VEL = k_p_left * l_error_vel_t;
+	P_RIGHT_VEL = k_p_right * r_error_vel_t;
+	P_KICK_VEL = k_p_kick * kick_error_vel;
 
-	double total_right = P_RIGHT_VEL_T + feed_forward_r;
-	double total_left = P_LEFT_VEL_T + feed_forward_l;
-	double total_kick = P_KICK_VEL_T + feed_forward_k;
+	double total_right = P_RIGHT_VEL + feed_forward_r;
+	double total_left = P_LEFT_VEL + feed_forward_l;
+	double total_kick = P_KICK_VEL + feed_forward_k;
 
 	canTalonFrontLeft->Set(-total_left);
 	canTalonBackLeft->Set(-total_left);
@@ -333,9 +348,7 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 	canTalonBackRight->Set(total_right);
 	canTalonKicker->Set(-total_kick);
 
-	std::cout << "Error: " << l_error_vel_t;
-	std::cout << " Ref: " << ref_left;
-	std::cout << " Current: " << l_current << std::endl;
+	yaw_last_error = yaw_error;
 
 }
 
@@ -379,18 +392,32 @@ void DriveController::ZeroI() {
 }
 
 void DriveController::HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel,
-bool *is_kick, DriveController *driveController) {
+bool *is_heading, DriveController *driveController) {
 
 	timerTeleop->Start();
 
-	while (!frc::RobotState::IsAutonomous()) {
+	while (true) {
+		while (!frc::RobotState::IsAutonomous() && !(bool) *is_heading) {
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(DC_SLEEP_TIME));
+			std::this_thread::sleep_for(
+					std::chrono::milliseconds(DC_SLEEP_TIME));
 
-		if (timerTeleop->HasPeriodPassed(timetokeep)) {
+			if (timerTeleop->HasPeriodPassed(timetokeep)) {
 
-			driveController->HDrive(JoyThrottle, JoyWheel, *is_kick);
+				driveController->HDrive(JoyThrottle, JoyWheel);
 
+			}
+		}
+		while (!frc::RobotState::IsAutonomous() && (bool) *is_heading) {
+
+			std::this_thread::sleep_for(
+					std::chrono::milliseconds(DC_SLEEP_TIME));
+
+			if (timerTeleop->HasPeriodPassed(timetokeep)) {
+
+				driveController->HeadingPID(JoyWheel);
+
+			}
 		}
 	}
 }
@@ -405,7 +432,7 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 		if (timerAuton->HasPeriodPassed(timetokeep)) {
 
-			driveController->DrivePID(driveController->GetRef());
+			//	driveController->DrivePID(driveController->GetRef());
 
 		}
 	}
@@ -414,12 +441,12 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 void DriveController::StartTeleopThreads(Joystick *JoyThrottle,
 		Joystick *JoyWheel,
-		bool *is_kick) {
+		bool *is_heading) {
 
 	DriveController *dc = this;
 
 	std::thread HDriveThread(&DriveController::HDriveWrapper, JoyThrottle,
-			JoyWheel, is_kick, dc);
+			JoyWheel, is_heading, dc);
 	HDriveThread.detach();
 
 }
@@ -433,14 +460,14 @@ void DriveController::StartAutonThreads() {
 
 }
 
-void DriveController::SetRef(double ref) {
+void DriveController::SetRef(double ref[3]) {
 
-	drive_ref = ref;
+
 
 }
 
 double DriveController::GetRef() {
 
-	return drive_ref;
+	return *drive_ref;
 
 }
