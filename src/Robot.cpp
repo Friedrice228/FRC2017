@@ -2,7 +2,9 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <sstream>
 #include <fstream>
+#include <iomanip>
 
 #include <time.h>
 #include <WPILib.h>
@@ -134,26 +136,29 @@ public:
 		double refs[200][5];  //l,r,k
 
 		int r = 0;
-		std::string data;
-		std::ifstream file ("MotionProfile.csv");
-		while (std::getline(file, data)){
-
+		std::fstream file("/home/lvuser/MotionProfile.csv", std::ios::in);
+		while (r < 200){
+			std::string data;
+			std::getline(file, data);
+			std::stringstream iss(data);
+			if (!file.good()){
+				std::cout << "FAIL" << std::endl;
+			}
 			int i = 0;
 			while (i < 5){
-
-				std::getline(file, data, ',');
-				refs[r][i] = std::stod(data);
-
+				std::string val;
+				std::getline(iss, val, ',');
+				std::stringstream convertor(val);
+				convertor>>refs[r][i];
 				i++;
-
 			}
 			r++;
 		}
 
-		//drive_controller->SetRef(refs);
-		//drive_controller->StartAutonThreads();
+		drive_controller->SetRef(refs);
+		drive_controller->StartAutonThreads();
 
-		std::cout << refs[0][0] << std::endl;
+		std::cout << refs[0][4] << std::endl;
 
 	}
 

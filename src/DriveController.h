@@ -41,7 +41,7 @@ public:
 	void ZeroEncs();
 	void ZeroI();
 	static void DrivePIDWrapper(DriveController *driveController);
-	void SetRef(double refs[][]);
+	void SetRef(double refs[][5]);
 	double GetRef();
 	static void HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading, DriveController *driveController);
 };

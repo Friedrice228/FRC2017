@@ -115,6 +115,7 @@ double kick_error_vel = 0;
 double timetokeep = 0.01;
 
 double drive_ref[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+double full_refs[200][5];
 
 double acceptable_yaw_error = .22;
 
@@ -364,10 +365,8 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 	double total_left = P_LEFT_VEL + feed_forward_l + (Kv * target_vel);
 	double total_kick = P_KICK_VEL + feed_forward_k;
 
-	canTalonFrontLeft->Set(-total_left);
-	//canTalonBackLeft->Set(-total_left); //back cantalons follow front, don't need to set them individually
+	canTalonFrontLeft->Set(-total_left); //back cantalons follow front, don't need to set them individually
 	canTalonFrontRight->Set(total_right);
-	//canTalonBackRight->Set(total_right);
 	canTalonKicker->Set(-total_kick);
 
 	yaw_last_error = yaw_error;
@@ -377,10 +376,8 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 void DriveController::StopAll() {
 
 	canTalonFrontLeft->Set(0);
-	//canTalonBackLeft->Set(0);
 
 	canTalonFrontRight->Set(0);
-	//canTalonBackRight->Set(0);
 
 	canTalonKicker->Set(0);
 }
@@ -419,7 +416,7 @@ bool *is_heading, DriveController *driveController) {
 	timerTeleop->Start();
 
 	while (true) {
-		while (!frc::RobotState::IsAutonomous() && !(bool) *is_heading) {
+		while (frc::RobotState::IsEnabled() && !frc::RobotState::IsAutonomous() && !(bool) *is_heading) {
 
 			std::this_thread::sleep_for(
 					std::chrono::milliseconds(DC_SLEEP_TIME));
@@ -430,7 +427,7 @@ bool *is_heading, DriveController *driveController) {
 
 			}
 		}
-		while (!frc::RobotState::IsAutonomous() && (bool) *is_heading) {
+		while (frc::RobotState::IsEnabled() && !frc::RobotState::IsAutonomous() && (bool) *is_heading) {
 
 			std::this_thread::sleep_for(
 					std::chrono::milliseconds(DC_SLEEP_TIME));
@@ -448,13 +445,23 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 	timerAuton->Start();
 
-	while (frc::RobotState::IsAutonomous()) {
+	int index = 0;
+
+	while (frc::RobotState::IsAutonomous() && frc::RobotState::IsEnabled()) {
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(DC_SLEEP_TIME));
 
 		if (timerAuton->HasPeriodPassed(timetokeep)) {
 
+				for (int i = 0; i < sizeof(drive_ref); i++){
+
+					drive_ref[i] = full_refs[index][i];
+
+				}
+
 				driveController->DrivePID();
+
+				index++;
 
 		}
 	}
@@ -482,8 +489,17 @@ void DriveController::StartAutonThreads() {
 
 }
 
-void DriveController::SetRef(double ref[][]) {
+void DriveController::SetRef(double ref[][5]) {
 
+	for (int r = 0; r < (sizeof(full_refs)/sizeof(full_refs[0])); r++){
+
+		for (int c = 0; c < (sizeof(full_refs[0])/sizeof(full_refs[0][0])); c++){
+
+			full_refs[r][c] = ref[r][c];
+
+		}
+
+	}
 
 }
 
