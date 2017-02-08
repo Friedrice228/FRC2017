@@ -10,7 +10,10 @@
 
 class Vision {
 public:
+
 	Vision();
+	double findAzimuth();
+	double findDistance();
 
 };
 

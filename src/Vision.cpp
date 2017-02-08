@@ -11,3 +11,29 @@ Vision::Vision() {
 	// TODO Auto-generated constructor stub
 
 }
+
+double Vision::findAzimuth() {
+
+	NetworkTable::SetClientMode();
+	NetworkTable::SetTeam(668);
+
+	auto table = NetworkTable::GetTable("SmartDashboard");
+
+	double azimuth = table->GetNumber("Azimuth", 0.0);
+
+	return azimuth;
+
+}
+
+double Vision::findDistance() {
+
+	NetworkTable::SetClientMode();
+	NetworkTable::SetTeam(668);
+
+	auto table = NetworkTable::GetTable("SmartDashboard");
+
+	double distance = table->GetNumber("Distance", 0.0);
+
+	return distance;
+
+}

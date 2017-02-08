@@ -21,11 +21,11 @@ const double MAX_YAW_RATE = (17.8 / 508) * MAX_Y_RPM; //max angular velocity div
 
 const int DC_SLEEP_TIME = 10;
 
-const int CAN_TALON_FRONT_LEFT = 37;
-const int CAN_TALON_BACK_LEFT = 24;
-const int CAN_TALON_BACK_RIGHT = 23;
-const int CAN_TALON_FRONT_RIGHT = 21;
-const int CAN_TALON_KICKER = 22;
+const int CAN_TALON_FRONT_LEFT = 18;
+const int CAN_TALON_BACK_LEFT = 22;
+const int CAN_TALON_BACK_RIGHT = 36;
+const int CAN_TALON_FRONT_RIGHT = 30;
+const int CAN_TALON_KICKER = 20;
 
 double l_last_error = 0;
 double r_last_error = 0;
@@ -369,6 +369,8 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 	canTalonFrontRight->Set(total_right);
 	canTalonKicker->Set(-total_kick);
 
+	std::cout << canTalonFrontLeft->Get() << std::endl;
+
 	yaw_last_error = yaw_error;
 
 }
@@ -457,9 +459,9 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 					drive_ref[i] = full_refs[index][i];
 
-				}
+					driveController->DrivePID();
 
-				driveController->DrivePID();
+				}
 
 				index++;
 
