@@ -12,12 +12,16 @@
 class GearRail {
 public:
 
+	//	State machine options
 	const int close_state_h = 0;
 	const int open_state_h = 1;
+	//	Default state closed
 	int gear_rail_state = close_state_h;
 
+	//	Solenoids
 	DoubleSolenoid *gearRailPistonRight, *gearRailPistonLeft;
 
+	//	Functions
 	GearRail();
 
 	void Open();

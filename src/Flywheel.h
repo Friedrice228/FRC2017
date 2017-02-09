@@ -14,13 +14,16 @@
 class Flywheel {
 public:
 
+	//	States
 	const int stop_state_h = 0;
 	const int spin_state_h = 1;
+	// 	Default state is stopped
 	int flywheel_state = stop_state_h;
 
-
+	//	CANTalons
 	CANTalon *canTalonFlywheelFrontLeft, *canTalonFlywheelFrontRight, *canTalonFlywheelBackLeft, *canTalonFlywheelBackRight;
 
+	//	Functions
 	Flywheel();
 
 	void Spin(int ref);

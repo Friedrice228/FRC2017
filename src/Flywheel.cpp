@@ -6,18 +6,24 @@
  */
 #include <Flywheel.h>
 
+//	State machine options
 const int stop_state = 0;
 const int spin_state = 1;
 
+//	Speed we want
 const int GOAL_RPM = 2500;
 
+//	Maximum error we want with the flywheel
 const int MAX_FLYWHEEL_ERROR = 300;
+//	CANTalon reference numbers
 const int CAN_TALON_FLYWHEEL_FRONT_RIGHT = 33;
 const int CAN_TALON_FLYWHEEL_BACK_RIGHT = 24;
 const int CAN_TALON_FLYWHEEL_FRONT_LEFT = 29;
 const int CAN_TALON_FLYWHEEL_BACK_LEFT = 19;
+//	How long we have to wait for the Flywheel to be cool
 const int FLYWHEEL_WAIT_TIME = 10;
 
+//	PID stuff
 const double RIGHT_F_GAIN = 0.025;
 const double RIGHT_P_GAIN = .01;
 const double LEFT_F_GAIN = 0;
@@ -25,14 +31,19 @@ const double LEFT_P_GAIN = 0;
 const double CONVERSION_DIVISION = 4096;
 const double CONVERSION_MULTIPLICATION = 600;
 
+//	Active?
 bool active_;
 
+//	This
 double flywheel_time = 0.01;
 
+//	Timer to keep track of time
 Timer *timerFly = new Timer();
 
+//	init
 Flywheel::Flywheel() {
 
+	//	CANTALON init for front right motor. Then, set up stuff
 	canTalonFlywheelFrontRight = new CANTalon(CAN_TALON_FLYWHEEL_FRONT_RIGHT);
 	canTalonFlywheelFrontRight->SetFeedbackDevice(CANTalon::CtreMagEncoder_Relative);
 	canTalonFlywheelFrontRight->SetF(RIGHT_F_GAIN);
@@ -42,7 +53,7 @@ Flywheel::Flywheel() {
 	canTalonFlywheelFrontRight->SetSensorDirection(true);
 	canTalonFlywheelFrontRight->SelectProfileSlot(0);
 
-	//Set all other motors as slaves that will follow the output of the master
+	//	Set all other motors as slaves that will follow the output of the master
 	canTalonFlywheelFrontLeft = new CANTalon(CAN_TALON_FLYWHEEL_FRONT_LEFT);
 	canTalonFlywheelFrontLeft->SetControlMode(CANSpeedController::kFollower);
 	canTalonFlywheelFrontLeft->Set(CAN_TALON_FLYWHEEL_FRONT_RIGHT);
@@ -58,31 +69,40 @@ Flywheel::Flywheel() {
 	active_ = false;
 }
 
+//	Make flywheel spin
 void Flywheel::Spin(int ref) {
 
+	//	Set it to go (Go Johnny go...)
 	canTalonFlywheelFrontRight->SetControlMode(CANSpeedController::kSpeed);
 	canTalonFlywheelFrontRight->Set(ref);
 
 
 }
 
+//	Stop the flywheel
 void Flywheel::Stop() {
 
+	//	STOP lights are just a suggestion
 	canTalonFlywheelFrontRight->Set(0);
 
 }
-// current speed target speed variable
+
+// Check if current speed is at target speed variable
 bool Flywheel::IsAtSpeed() {
 
+	//	Get current speed
 	double flywheel_value = -((double) canTalonFlywheelFrontRight->GetEncVel()
 			/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
 
+	//	Make sure we're within the max error of our goal RPM as defined above
 	if (abs(flywheel_value - GOAL_RPM) < MAX_FLYWHEEL_ERROR) {
 
+		//	If we're satisfied, the flywheel is at speed
 		return true;
 
 	} else {
 
+		//	If we aren't satisfied, eat a Snickers and try again
 		return false;
 	}
 

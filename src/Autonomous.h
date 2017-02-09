@@ -10,8 +10,10 @@
 class Autonomous {
 public:
 
+	//	Our DriveController to make robot go
 	DriveController *drive_controller;
 
+	//	Function defining
 	Autonomous();
 
 	void GearPlacementUsualAuton();
