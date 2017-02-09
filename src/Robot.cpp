@@ -133,32 +133,8 @@ public:
 		drive_controller->ZeroEncs();
 		drive_controller->ZeroI();
 
-		double refs[200][5];  //l,r,k
+		autonomous_->DriveForward();
 
-		int r = 0;
-		std::fstream file("/home/lvuser/MotionProfile.csv", std::ios::in);
-		while (r < 200){
-			std::string data;
-			std::getline(file, data);
-			std::stringstream iss(data);
-			if (!file.good()){
-				std::cout << "FAIL" << std::endl;
-			}
-			int i = 0;
-			while (i < 5){
-				std::string val;
-				std::getline(iss, val, ',');
-				std::stringstream convertor(val);
-				convertor>>refs[r][i];
-				i++;
-			}
-			r++;
-		}
-
-		drive_controller->SetRef(refs);
-		drive_controller->StartAutonThreads();
-
-		std::cout << refs[0][4] << std::endl;
 
 	}
 

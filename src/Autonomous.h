@@ -1,10 +1,16 @@
 
 #include <WPILib.h>
+#include <DriveController.h>
+#include <fstream>
+#include <iostream>
+
 #ifndef SRC_AUTONOMOUS_H_
 #define SRC_AUTONOMOUS_H_
 
 class Autonomous {
 public:
+
+	DriveController *drive_controller;
 
 	Autonomous();
 
@@ -16,6 +22,7 @@ public:
 	void ShootAutonBlue();
 	void ShootAndLoadAutonBlue();
 	void ShootAndLoadAutonRed();
+	void DriveForward();
 
 
 

@@ -19,7 +19,7 @@ double DYN_MAX_Y_RPM = 480;
 const double MAX_X_RPM = 300; // Max RPM ACTUAL: 330
 const double MAX_YAW_RATE = (17.8 / 508) * MAX_Y_RPM; //max angular velocity divided by the max rpm multiplied by set max rpm
 
-const int DC_SLEEP_TIME = 10;
+const int DC_SLEEP_TIME = 1;
 
 const int CAN_TALON_FRONT_LEFT = 18;
 const int CAN_TALON_BACK_LEFT = 22;
@@ -68,8 +68,8 @@ const double K_D_RIGHT_DIS = 0.0;
 const double K_D_LEFT_DIS = 0.0;
 const double K_D_KICKER_DIS = 0.0;
 
-const double MAX_FPS = ((MAX_Y_RPM * 4*PI) / 12.0) / 60; //conversion to fps
-const double Kv = 1/MAX_FPS; //scale from -1 to 1
+const double MAX_FPS = ((MAX_Y_RPM * 4 * PI) / 12.0) / 60; //conversion to fps
+const double Kv = 1 / MAX_FPS; //scale from -1 to 1
 
 double P_RIGHT_DIS = 0;
 double I_RIGHT_DIS = 0;
@@ -114,13 +114,10 @@ double kick_error_vel = 0;
 
 double timetokeep = 0.01;
 
-double drive_ref[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
-double full_refs[200][5];
+double drive_ref[5] = { 0.0, 0.0, 0.0, 0.0, 0.0 };
+double full_refs[300][5];
 
 double acceptable_yaw_error = .22;
-
-
-
 
 Timer *timerTeleop = new Timer();
 Timer *timerAuton = new Timer();
@@ -202,10 +199,11 @@ void DriveController::DrivePID() { //finds targets for Auton
 	double targetYawRate = drive_ref[3];
 	double tarVel = drive_ref[4];
 
+	//std::cout << "Right: " << canTalonFrontRight->Get() << std::endl;
+
 	//conversion to feet
 	double r_dis = -(((double) canTalonFrontRight->GetEncPosition()
-			/ TICKS_PER_ROT) //(negative)
-	* (WHEEL_RADIUS * PI) / 12);
+			/ TICKS_PER_ROT) * (WHEEL_RADIUS * PI) / 12);
 	double l_dis = (((double) canTalonFrontLeft->GetEncPosition()
 			/ TICKS_PER_ROT) * (WHEEL_RADIUS * PI) / 12);
 
@@ -215,9 +213,6 @@ void DriveController::DrivePID() { //finds targets for Auton
 	l_error_dis_au = refLeft - l_dis;
 	r_error_dis_au = refRight - r_dis;
 	k_error_dis_au = refKick - k_dis;
-
-	std::cout << "R: " << r_error_dis_au;
-	std::cout << " L: " << l_error_dis_au << std::endl;
 
 	i_right += (r_error_dis_au);
 	d_right = (r_error_dis_au - r_last_error);
@@ -260,14 +255,13 @@ void DriveController::DrivePID() { //finds targets for Auton
 		target_rpm_right = -MAX_Y_RPM;
 	}
 
-	Drive(target_rpm_kick, target_rpm_right, target_rpm_left, targetYawRate, K_P_RIGHT_VEL,
-			K_P_LEFT_VEL, K_P_KICK_VEL, K_P_YAW_AU, K_D_YAW_AU, tarVel);
+	Drive(target_rpm_kick, target_rpm_right, target_rpm_left, targetYawRate,
+			K_P_RIGHT_VEL, K_P_LEFT_VEL, K_P_KICK_VEL, K_P_YAW_AU, K_D_YAW_AU,
+			tarVel);
 
 	l_last_error = l_error_dis_au;
 	r_last_error = r_error_dis_au;
 	kick_last_error = k_error_dis_au;
-
-	ZeroEncs();
 
 }
 
@@ -284,9 +278,9 @@ void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 
 	double total_heading = K_P_YAW_HEADING_POS * error_heading;
 
-	if (total_heading > MAX_YAW_RATE){
+	if (total_heading > MAX_YAW_RATE) {
 		total_heading = MAX_YAW_RATE;
-	}else if (total_heading < -MAX_YAW_RATE){
+	} else if (total_heading < -MAX_YAW_RATE) {
 		total_heading = -MAX_YAW_RATE;
 	}
 
@@ -369,8 +363,6 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 	canTalonFrontRight->Set(total_right);
 	canTalonKicker->Set(-total_kick);
 
-	std::cout << canTalonFrontLeft->Get() << std::endl;
-
 	yaw_last_error = yaw_error;
 
 }
@@ -418,7 +410,8 @@ bool *is_heading, DriveController *driveController) {
 	timerTeleop->Start();
 
 	while (true) {
-		while (frc::RobotState::IsEnabled() && !frc::RobotState::IsAutonomous() && !(bool) *is_heading) {
+		while (frc::RobotState::IsEnabled() && !frc::RobotState::IsAutonomous()
+				&& !(bool) *is_heading) {
 
 			std::this_thread::sleep_for(
 					std::chrono::milliseconds(DC_SLEEP_TIME));
@@ -429,7 +422,8 @@ bool *is_heading, DriveController *driveController) {
 
 			}
 		}
-		while (frc::RobotState::IsEnabled() && !frc::RobotState::IsAutonomous() && (bool) *is_heading) {
+		while (frc::RobotState::IsEnabled() && !frc::RobotState::IsAutonomous()
+				&& (bool) *is_heading) {
 
 			std::this_thread::sleep_for(
 					std::chrono::milliseconds(DC_SLEEP_TIME));
@@ -455,16 +449,21 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 		if (timerAuton->HasPeriodPassed(timetokeep)) {
 
-				for (int i = 0; i < sizeof(drive_ref); i++){
+			for (int i = 0; i < sizeof(drive_ref); i++) {
 
-					drive_ref[i] = full_refs[index][i];
+				drive_ref[i] = full_refs[index][i];
 
-					driveController->DrivePID();
+			}
 
-				}
+			driveController->DrivePID();
 
-				index++;
+			index++;
 
+		}
+
+		if (index >= 300) {
+			driveController->StopAll();
+			break;
 		}
 	}
 
@@ -493,9 +492,10 @@ void DriveController::StartAutonThreads() {
 
 void DriveController::SetRef(double ref[][5]) {
 
-	for (int r = 0; r < (sizeof(full_refs)/sizeof(full_refs[0])); r++){
+	for (int r = 0; r < (sizeof(full_refs) / sizeof(full_refs[0])); r++) {
 
-		for (int c = 0; c < (sizeof(full_refs[0])/sizeof(full_refs[0][0])); c++){
+		for (int c = 0; c < (sizeof(full_refs[0]) / sizeof(full_refs[0][0]));
+				c++) {
 
 			full_refs[r][c] = ref[r][c];
 
