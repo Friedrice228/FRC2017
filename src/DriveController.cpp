@@ -122,6 +122,8 @@ double acceptable_yaw_error = .22;
 Timer *timerTeleop = new Timer();
 Timer *timerAuton = new Timer();
 
+std::thread HDriveThread, DrivePIDThread;
+
 DriveController::DriveController() {
 
 	canTalonFrontLeft = new CANTalon(CAN_TALON_FRONT_LEFT);
@@ -457,8 +459,6 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 			driveController->DrivePID();
 
-			std::cout << drive_ref[1] << std::endl;
-
 			index++;
 
 		}
@@ -477,8 +477,7 @@ void DriveController::StartTeleopThreads(Joystick *JoyThrottle,
 
 	DriveController *dc = this;
 
-	std::thread HDriveThread(&DriveController::HDriveWrapper, JoyThrottle,
-			JoyWheel, is_heading, dc);
+	HDriveThread = std::thread(&DriveController::HDriveWrapper, JoyThrottle, JoyWheel, is_heading, dc);
 	HDriveThread.detach();
 
 }
@@ -487,8 +486,15 @@ void DriveController::StartAutonThreads() {
 
 	DriveController *dc = this;
 
-	std::thread DrivePIDThread(&DriveController::DrivePIDWrapper, dc);
+	DrivePIDThread = std::thread(&DriveController::DrivePIDWrapper, dc);
 	DrivePIDThread.detach();
+
+}
+
+void::DriveController::DisableThreads(){
+
+	DrivePIDThread.~thread();
+	HDriveThread.~thread();
 
 }
 

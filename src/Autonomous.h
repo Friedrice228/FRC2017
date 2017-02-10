@@ -10,9 +10,7 @@
 class Autonomous {
 public:
 
-	DriveController *drive_controller;
-
-	Autonomous();
+	Autonomous(DriveController *drive_controller_pass);
 
 	void GearPlacementUsualAuton();
 	void GearPlacementDriveAuton();

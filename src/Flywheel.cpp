@@ -31,6 +31,8 @@ double flywheel_time = 0.01;
 
 Timer *timerFly = new Timer();
 
+std::thread SpinThread;
+
 Flywheel::Flywheel() {
 
 	canTalonFlywheelFrontRight = new CANTalon(CAN_TALON_FLYWHEEL_FRONT_RIGHT);
@@ -152,7 +154,12 @@ void Flywheel::StartThread() {
 
 	Flywheel *fw = new Flywheel();
 
-	std::thread SpinThread(&Flywheel::SpinWrapper, fw, GOAL_RPM, &active_);
+	SpinThread = std::thread(&Flywheel::SpinWrapper, fw, GOAL_RPM, &active_);
 	SpinThread.detach();
+
+}
+void Flywheel::DisableThreads(){
+
+	SpinThread.~thread();
 
 }

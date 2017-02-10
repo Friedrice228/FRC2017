@@ -7,15 +7,40 @@
 
 #include <Autonomous.h>
 
+DriveController *drive_controller;
 
-Autonomous::Autonomous() {
+Autonomous::Autonomous(DriveController *drive_controller_pass) {
 
-	drive_controller = new DriveController();
+	drive_controller = drive_controller_pass;
 
 }
 
 void Autonomous::DriveForward() {
 
+	double refs[300][5];
+
+	int r = 0;
+	std::fstream file("/home/lvuser/MP.csv", std::ios::in);
+	while (r < 300) {
+		std::string data;
+		std::getline(file, data);
+		std::stringstream iss(data);
+		if (!file.good()) {
+			std::cout << "FAIL" << std::endl;
+		}
+		int i = 0;
+		while (i < 5) {
+			std::string val;
+			std::getline(iss, val, ',');
+			std::stringstream convertor(val);
+			convertor >> refs[r][i];
+			i++;
+		}
+		r++;
+	}
+
+	drive_controller->SetRef(refs);
+	drive_controller->StartAutonThreads();
 
 }
 

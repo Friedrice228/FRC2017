@@ -28,6 +28,7 @@ public:
 	bool IsAtSpeed();
 	void FlywheelStateMachine();
 	void StartThread();
+	void DisableThreads();
 	static void SpinWrapper(Flywheel *fw, int ref, bool *active);
 	double GetSpeed();
 	double FlywheelValue();
