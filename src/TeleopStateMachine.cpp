@@ -64,7 +64,7 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 
 		conveyor_->conveyor_state = conveyor_->popcorn_state_h;
 
-	} else {
+	} else if (!is_popcorn && state != fire_state) {
 
 		conveyor_->conveyor_state = conveyor_->stop_state_h;
 

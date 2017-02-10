@@ -34,7 +34,7 @@ double kick_last_error = 0;
 
 const double K_P_YAW_T = 40.0;
 
-const double K_P_YAW_AU = 45.0;
+const double K_P_YAW_AU = 55.0;
 const double K_D_YAW_AU = 10.0;
 
 const double K_P_YAW_H_VEL = 17.0;
@@ -199,7 +199,7 @@ void DriveController::DrivePID() { //finds targets for Auton
 	double targetYawRate = drive_ref[3];
 	double tarVel = drive_ref[4];
 
-	//std::cout << "Right: " << canTalonFrontRight->Get() << std::endl;
+//	std::cout << "Right: " << canTalonFrontRight->Get() << std::endl;
 
 	//conversion to feet
 	double r_dis = -(((double) canTalonFrontRight->GetEncPosition()
@@ -456,6 +456,8 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 			}
 
 			driveController->DrivePID();
+
+			std::cout << drive_ref[1] << std::endl;
 
 			index++;
 
