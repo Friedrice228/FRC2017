@@ -34,10 +34,10 @@ double kick_last_error = 0;
 
 const double K_P_YAW_T = 40.0;
 
-const double K_P_YAW_AU = 55.0;
+const double K_P_YAW_AU = 60.0;
 const double K_D_YAW_AU = 10.0;
 
-const double K_P_YAW_H_VEL = 17.0;
+const double K_P_YAW_H_VEL = 37.0; //17.0
 
 const double K_P_YAW_HEADING_POS = 6.668;
 
@@ -124,6 +124,8 @@ Timer *timerAuton = new Timer();
 
 std::thread HDriveThread, DrivePIDThread;
 
+//int* ptr_index;
+
 DriveController::DriveController() {
 
 	canTalonFrontLeft = new CANTalon(CAN_TALON_FRONT_LEFT);
@@ -152,7 +154,7 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) { //find
 
 	double axis_ratio = 0.0; //ratio between x and y axes
 
-	if (JoyThrottle->GetX() != 0) { //if x is 0, it is undefined (division)
+	if (JoyThrottle->GetX() != 0) { //if x is 0, it i	s undefined (division)
 		axis_ratio = std::abs(JoyThrottle->GetY() / JoyThrottle->GetX()); //dont use regular abs, that returns an int
 		DYN_MAX_Y_RPM = MAX_X_RPM * (double) axis_ratio;
 		DYN_MAX_Y_RPM = DYN_MAX_Y_RPM > MAX_Y_RPM ? MAX_Y_RPM : DYN_MAX_Y_RPM; //if DYN_max_Y is bigger than MAX_Y then set to MAX_Y, otherwise keep DYN_MAX_Y
@@ -286,10 +288,32 @@ void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 		total_heading = -MAX_YAW_RATE;
 	}
 
-	std::cout << "Error Angle: " << error_heading;
-	std::cout << " Ref Angle: " << target_heading;
-	std::cout << " Total Speed: " << total_heading;
-	std::cout << " Current angle: " << current_heading << std::endl;
+	Drive(0.0, 0.0, 0.0, total_heading, K_P_RIGHT_VEL, K_P_LEFT_VEL,
+			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0);
+
+}
+
+void DriveController::VisionP(double angle) {
+
+	double normalized_angle = 0;
+
+	if (angle > 180) {
+		normalized_angle = angle - 360; //will be negative to go left
+	} else {
+		normalized_angle = angle;
+	}
+
+	double current_heading = ahrs->GetYaw() * ( PI / 180.0);
+
+	double error_heading = normalized_angle;
+
+	double total_heading = K_P_YAW_HEADING_POS * error_heading;
+
+	if (total_heading > MAX_YAW_RATE) {
+		total_heading = MAX_YAW_RATE;
+	} else if (total_heading < -MAX_YAW_RATE) {
+		total_heading = -MAX_YAW_RATE;
+	}
 
 	Drive(0.0, 0.0, 0.0, total_heading, K_P_RIGHT_VEL, K_P_LEFT_VEL,
 			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0);
@@ -445,6 +469,8 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 	int index = 0;
 
+	//ptr_index = &index;
+
 	while (frc::RobotState::IsAutonomous() && frc::RobotState::IsEnabled()) {
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(DC_SLEEP_TIME));
@@ -477,7 +503,8 @@ void DriveController::StartTeleopThreads(Joystick *JoyThrottle,
 
 	DriveController *dc = this;
 
-	HDriveThread = std::thread(&DriveController::HDriveWrapper, JoyThrottle, JoyWheel, is_heading, dc);
+	HDriveThread = std::thread(&DriveController::HDriveWrapper, JoyThrottle,
+			JoyWheel, is_heading, dc);
 	HDriveThread.detach();
 
 }
@@ -491,7 +518,7 @@ void DriveController::StartAutonThreads() {
 
 }
 
-void::DriveController::DisableThreads(){
+void ::DriveController::DisableThreads() {
 
 	DrivePIDThread.~thread();
 	HDriveThread.~thread();
@@ -513,8 +540,9 @@ void DriveController::SetRef(double ref[][5]) {
 
 }
 
-double DriveController::GetRef() {
+int* DriveController::GetIndex() {
 
-	return *drive_ref;
+//	return ptr_index;
 
 }
+

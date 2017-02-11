@@ -62,10 +62,12 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 
 	if (is_popcorn) {
 
+		elevator_->elevator_state = elevator_->reverse_state_h;
 		conveyor_->conveyor_state = conveyor_->popcorn_state_h;
 
 	} else if (!is_popcorn && state != fire_state) {
 
+		elevator_->elevator_state = elevator_->stop_state_h;
 		conveyor_->conveyor_state = conveyor_->stop_state_h;
 
 	}
@@ -79,12 +81,15 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 		gear_rail->gear_rail_state = gear_rail->close_state_h;
 	}
 
+
 	//START SWITCH
 	switch (state) {
 
 	case init_state:
 
 		SmartDashboard::PutString("State", "Initial");
+
+		fly_wheel->flywheel_state = fly_wheel->stop_state_h;
 
 		conveyor_->conveyor_state = conveyor_->stop_state_h;
 
@@ -151,15 +156,15 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 
 		if (is_popcorn) {
 
+			elevator_->elevator_state = elevator_->reverse_state_h;
 			conveyor_->conveyor_state = conveyor_->popcorn_state_h;
 
 		} else {
 
 			conveyor_->conveyor_state = conveyor_->load_state_h;
+			elevator_->elevator_state = elevator_->elevate_state_h;
 
 		}
-
-		elevator_->elevator_state = elevator_->elevate_state_h;
 
 		if (!is_fire) {
 

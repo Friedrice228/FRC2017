@@ -9,6 +9,7 @@
 
 DriveController *drive_controller;
 
+
 Autonomous::Autonomous(DriveController *drive_controller_pass) {
 
 	drive_controller = drive_controller_pass;
@@ -75,4 +76,6 @@ void Autonomous::ShootAndLoadAutonBlue() {
 void Autonomous::ShootAndLoadAutonRed() {
 
 }
+
+
 

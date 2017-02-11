@@ -18,7 +18,7 @@ public:
 	const int reverse_state_h = 2;
 	int elevator_state = stop_state_h;
 
-	CANTalon *canTalonElevatorTop, *canTalonElevatorBottom;
+	CANTalon *canTalonElevator;
 
 	Elevator();
 

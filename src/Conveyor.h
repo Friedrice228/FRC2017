@@ -18,7 +18,7 @@ public:
 	const int stop_state_h = 2;
 	int conveyor_state = stop_state_h;
 
-	CANTalon *canTalonBack, *canTalonFront;
+	CANTalon *canTalonConveyor;
 
 	Conveyor();
 

@@ -3,36 +3,31 @@
 const int popcorn_state = 0;
 const int load_state = 1;
 const int stop_state = 2;
-const int CAN_TALON_FRONT = 77;
-const int CAN_TALON_BACK = 78;
+const int CAN_TALON_CONVEYOR = 17;
 const double POPCORN_SPEED = .5;
 const double LOAD_SPEED = .5;
 
 Conveyor::Conveyor() {
 
-	canTalonFront = new CANTalon(CAN_TALON_FRONT);
-	canTalonBack = new CANTalon(CAN_TALON_BACK);
+	canTalonConveyor = new CANTalon(CAN_TALON_CONVEYOR);
 
 }
 
 void Conveyor::Popcorn(double speed) {
 
-	canTalonFront->Set(-speed);
-	canTalonBack->Set(-speed);
+	canTalonConveyor->Set(-speed);
 
 }
 
 void Conveyor::Stop() {
 
-	canTalonFront->Set(0);
-	canTalonBack->Set(0);
+	canTalonConveyor->Set(0);
 
 }
 
 void Conveyor::Load(double speed) {
 
-	canTalonFront->Set(speed);
-	canTalonBack->Set(speed);
+	canTalonConveyor->Set(speed);
 
 }
 

@@ -21,8 +21,6 @@
 #include <Autonomous.h>
 #include <LEDLightStrip.h>
 
-
-
 class Robot: public frc::IterativeRobot {
 public:
 
@@ -58,9 +56,11 @@ public:
 	frc::SendableChooser<std::string> allianceChooser;
 
 	const std::string gearPlacementUsualAuton = "Gear Placement Usual"; //gear to middle position
-	const std::string gearPlacementAlternateAuton = "Gear Placement Alternate"; //gear to side position
+	const std::string gearPlacementRight = "Gear Placement Right"; //gear to side position
+	const std::string gearPlacementLeft = "Gear Placement Left";
 	const std::string shootAuton = "Shoot"; //shoot with pre-loaded balls
 	const std::string shootAndLoadAuton = "Shoot and Load"; //get balls from hopper, then shoot
+	const std::string driveForward = "Drive Forward";
 
 	const std::string redAlliance = "Red Alliance";
 	const std::string blueAlliance = "Blue Alliance";
@@ -107,10 +107,11 @@ public:
 
 		autonChooser.AddDefault(gearPlacementUsualAuton,
 				gearPlacementUsualAuton);
-		autonChooser.AddObject(gearPlacementAlternateAuton,
-				gearPlacementAlternateAuton);
+		autonChooser.AddObject(gearPlacementRight, gearPlacementRight);
+		autonChooser.AddObject(gearPlacementLeft, gearPlacementLeft);
 		autonChooser.AddObject(shootAuton, shootAuton);
 		autonChooser.AddObject(shootAndLoadAuton, shootAndLoadAuton);
+		autonChooser.AddObject(driveForward, driveForward);
 
 		frc::SmartDashboard::PutData("Auto Modes", &autonChooser);
 
@@ -121,7 +122,7 @@ public:
 
 		is_heading = false;
 
-	}// RobotInit
+	} // RobotInit
 
 	void AutonomousInit() override {
 
@@ -129,87 +130,78 @@ public:
 
 		allianceSelected = allianceChooser.GetSelected();
 
+		//fly_wheel->StartThread(); //starts the speed controller
+
 		drive_controller->ZeroEncs();
 		drive_controller->ZeroI();
+		drive_controller->ahrs->ZeroYaw();
 
-		autonomous_->DriveForward();
+		if (autoSelected == gearPlacementUsualAuton) {
 
+		} else if (autoSelected == gearPlacementRight) {
+
+		} else if (autoSelected == gearPlacementLeft) {
+
+		} else if (autoSelected == driveForward) {
+
+			autonomous_->DriveForward();
+
+		} else if (autoSelected == shootAuton) {
+
+			if (allianceSelected == redAlliance) {
+
+			} else {
+
+			}
+
+		} else if (autoSelected == shootAndLoadAuton) {
+
+			if (allianceSelected == redAlliance) {
+
+			} else {
+
+			}
+
+		}
 
 	}
 
 	void AutonomousPeriodic() {
-//
-//		if (autoSelected == gearPlacementUsualAuton) {
-//
-//			std::cout << "Auto 1" << std::endl;
-//
-//		} else if (autoSelected == gearPlacementAlternateAuton) {
-//
-//			std::cout << "Auto 2" << std::endl;
-//
-//		} else if (autoSelected == shootAuton) {
-//
-//			if (allianceSelected == redAlliance) {
-//
-//				std::cout << "Red" << std::endl;
-//
-//			} else {
-//
-//				std::cout << "Blue" << std::endl;
-//
-//			}
-//
-//		} else if (autoSelected == shootAndLoadAuton) {
-//
-//			if (allianceSelected == redAlliance) {
-//
-//				std::cout << "Red" << std::endl;
-//
-//			} else {
-//
-//				std::cout << "Blue" << std::endl;
-//
-//			}
-//
-//		}
-
-
 
 	}
 
 	void TeleopInit() {
 
-		fly_wheel->StartThread(); //starts the speed controller
-
-		drive_controller->StartTeleopThreads(joyThrottle, joyWheel, &is_heading); //starts the drive code
+		drive_controller->StartTeleopThreads(joyThrottle, joyWheel,
+				&is_heading); //starts the drive code
 		drive_controller->KickerDown();
-
 
 	}
 
 	void TeleopPeriodic() {
 
-#if 0
 		bool gear_button = joyOp->GetRawButton(GEAR_BUTTON);
 		bool fire_button = joyOp->GetRawButton(FIRE_BUTTON);
 		bool climb_button = joyOp->GetRawButton(CLIMB_BUTTON);
 		bool return_button = joyOp->GetRawButton(RETURN_BUTTON);
 		bool gear_light_button = joyOp->GetRawButton(GEAR_LIGHT_BUTTON);
 		bool ball_light_button = joyOp->GetRawButton(BALL_LIGHT_BUTTON);
-		bool gear_and_ball_light_button = joyOp->GetRawButton(GEAR_AND_BALL_LIGHT_BUTTON);
+		bool gear_and_ball_light_button = joyOp->GetRawButton(
+				GEAR_AND_BALL_LIGHT_BUTTON);
 		bool popcorn_button = joyOp->GetRawButton(POPCORN_BUTTON);
 		bool second_fire_button = joyOp->GetRawButton(FIRE_BUTTON_2);
 
-		teleop_state_machine->StateMachine(gear_button, fire_button, climb_button, return_button, popcorn_button, second_fire_button);
+		teleop_state_machine->StateMachine(gear_button, fire_button,
+				climb_button, return_button, popcorn_button,
+				second_fire_button);
 
-		light_->LEDStateMachine(gear_light_button, ball_light_button, gear_and_ball_light_button);
+		light_->LEDStateMachine(gear_light_button, ball_light_button,
+				gear_and_ball_light_button);
 		conveyor_->ConStateMachine();
 		elevator_->ElevatorStateMachine();
 		fly_wheel->FlywheelStateMachine();
 		gear_rail->GearRailStateMachine();
 		climber_->ClimberStateMachine();
-#endif
-
 
 		//START DRIVE CODE
 		const int HDrive = 0;
@@ -255,10 +247,9 @@ public:
 		}
 		//END DRIVECODE
 
-
 	} // TeleopPeriodic
 
-	void DisabledInit(){
+	void DisabledInit() {
 
 		drive_controller->DisableThreads();
 
@@ -269,7 +260,6 @@ public:
 	void TestPeriodic() {
 
 		std::cout << vision_->findAzimuth() << std::endl;
-
 
 	}
 
