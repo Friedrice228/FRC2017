@@ -136,6 +136,36 @@ public:
 		drive_controller->ZeroI();
 		drive_controller->ahrs->ZeroYaw();
 
+		drive_controller->ResetIndex();
+
+		double refs[300][5];
+		int r = 0;
+		std::fstream file("/home/lvuser/MP.csv", std::ios::in);
+		while (r < 300) {
+			std::string data;
+			std::getline(file, data);
+			std::stringstream iss(data);
+			if (!file.good()) {
+				std::cout << "FAIL" << std::endl;
+			}
+			int i = 0;
+			while (i < 5) {
+				std::string val;
+				std::getline(iss, val, ',');
+				std::stringstream convertor(val);
+				convertor >> refs[r][i];
+				i++;
+			}
+			r++;
+		}
+
+		drive_controller->SetRef(refs);
+		drive_controller->StartAutonThreads();
+
+	}
+
+	void AutonomousPeriodic() {
+
 		if (autoSelected == gearPlacementUsualAuton) {
 
 		} else if (autoSelected == gearPlacementRight) {
@@ -166,10 +196,6 @@ public:
 
 	}
 
-	void AutonomousPeriodic() {
-
-	}
-
 	void TeleopInit() {
 
 		drive_controller->StartTeleopThreads(joyThrottle, joyWheel,
@@ -195,8 +221,8 @@ public:
 				climb_button, return_button, popcorn_button,
 				second_fire_button);
 
-		light_->LEDStateMachine(gear_light_button, ball_light_button,
-				gear_and_ball_light_button);
+//		light_->LEDStateMachine(gear_light_button, ball_light_button,
+//				gear_and_ball_light_button);
 		conveyor_->ConStateMachine();
 		elevator_->ElevatorStateMachine();
 		fly_wheel->FlywheelStateMachine();

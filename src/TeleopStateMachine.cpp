@@ -97,8 +97,6 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 
 		state = wait_for_button_state;
 
-		std::cout << "init" << std::endl;
-
 		break;
 
 	case wait_for_button_state: // can only do one thing at a time - sean wanted this
@@ -110,8 +108,6 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 		elevator_->elevator_state = elevator_->stop_state_h;
 
 		climber_->climber_state = climber_->stop_state_h;
-
-		std::cout << "wait for button" << std::endl;
 
 		if (is_fire) {
 
@@ -129,9 +125,7 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 
 		SmartDashboard::PutString("State", "Initial Shooting");
 
-		fly_wheel->flywheel_state = fly_wheel->spin_state_h; //TODO: if flywheel doesn't spin up, then check this
-
-		std::cout << "init shooting" << std::endl;
+		fly_wheel->flywheel_state = fly_wheel->spin_state_h;
 
 		std::cout << fly_wheel->FlywheelValue() << std::endl;
 
@@ -151,8 +145,6 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 	case fire_state:
 
 		SmartDashboard::PutString("State", "Fire");
-
-		std::cout << "fire" << std::endl;
 
 		if (is_popcorn) {
 
@@ -184,8 +176,6 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 
 		state = climbing_state;
 
-		std::cout << "init climbing" << std::endl;
-
 		break;
 
 	case climbing_state: //hold to climb, release to stop
@@ -193,8 +183,6 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 		SmartDashboard::PutString("State", "Climbing");
 
 		climber_->climber_state = climber_->climbing_state_h;
-
-		std::cout << "climbing" << std::endl;
 
 		if (!is_climb) {
 
@@ -214,8 +202,6 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 		SmartDashboard::PutString("State", "Finish Climbing");
 
 		climber_->climber_state = climber_->stop_state_h;
-
-		std::cout << "finish climbing" << std::endl;
 
 		if (is_ret) {
 

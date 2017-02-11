@@ -42,7 +42,8 @@ public:
 	void KickerDown();
 	void ZeroEncs();
 	void ZeroI();
-	int* GetIndex();
+	int GetIndex();
+	void ResetIndex();
 	static void DrivePIDWrapper(DriveController *driveController);
 	void SetRef(double refs[][5]);
 	double GetRef();

@@ -34,8 +34,8 @@ double kick_last_error = 0;
 
 const double K_P_YAW_T = 40.0;
 
-const double K_P_YAW_AU = 60.0;
-const double K_D_YAW_AU = 10.0;
+const double K_P_YAW_AU = 55.0;
+const double K_D_YAW_AU = 0.0;
 
 const double K_P_YAW_H_VEL = 37.0; //17.0
 
@@ -124,7 +124,9 @@ Timer *timerAuton = new Timer();
 
 std::thread HDriveThread, DrivePIDThread;
 
-//int* ptr_index;
+int index1 = 0;
+
+int *ptr_index = &index1;
 
 DriveController::DriveController() {
 
@@ -467,9 +469,7 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 	timerAuton->Start();
 
-	int index = 0;
-
-	//ptr_index = &index;
+//	int index1 = 0;
 
 	while (frc::RobotState::IsAutonomous() && frc::RobotState::IsEnabled()) {
 
@@ -479,17 +479,17 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 			for (int i = 0; i < sizeof(drive_ref); i++) {
 
-				drive_ref[i] = full_refs[index][i];
+				drive_ref[i] = full_refs[index1][i];
 
 			}
 
 			driveController->DrivePID();
 
-			index++;
+			index1++;
 
 		}
 
-		if (index >= 300) {
+		if (index1 >= 300) {
 			driveController->StopAll();
 			break;
 		}
@@ -540,9 +540,15 @@ void DriveController::SetRef(double ref[][5]) {
 
 }
 
-int* DriveController::GetIndex() {
+int DriveController::GetIndex() {
 
-//	return ptr_index;
+	return *ptr_index;
 
 }
+void DriveController::ResetIndex(){
+
+	index1 = 0;
+
+}
+
 
