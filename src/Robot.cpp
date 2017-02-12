@@ -84,8 +84,6 @@ public:
 		joyThrottle = new Joystick(JOY_THROTTLE);
 		joyWheel = new Joystick(JOY_WHEEL);
 
-		drive_controller = new DriveController();
-
 		fly_wheel = new Flywheel();
 
 		elevator_ = new Elevator();
@@ -95,6 +93,8 @@ public:
 		conveyor_ = new Conveyor();
 
 		vision_ = new Vision();
+
+		drive_controller = new DriveController(vision_);
 
 		autonomous_ = new Autonomous(drive_controller, elevator_, conveyor_, gear_rail, fly_wheel);
 

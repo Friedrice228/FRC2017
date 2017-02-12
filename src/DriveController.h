@@ -13,6 +13,7 @@
 #include <chrono>
 #include <cmath>
 #include <Timer.h>
+#include <Vision.h>
 
 #ifndef SRC_DRIVECONTROLLER_H_
 #define SRC_DRIVECONTROLLER_H_
@@ -27,7 +28,7 @@ public:
 	AHRS *ahrs;
 	DoubleSolenoid *kickerPiston;
 
-	DriveController();
+	DriveController(Vision *vis);
 	void HDrive(Joystick *JoyThrottle, Joystick *JoyWheel);
 	void StopAll();
 	void StartTeleopThreads(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading);
@@ -37,7 +38,7 @@ public:
 			double k_p_yaw, double k_d_yaw, double target_vel);
 	void DrivePID();
 	void HeadingPID(Joystick *joyWheel);
-	void VisionP(double angle);
+	void VisionP();
 	void KickerUp();
 	void KickerDown();
 	void ZeroEncs();
@@ -45,7 +46,7 @@ public:
 	int GetIndex();
 	void ResetIndex();
 	static void DrivePIDWrapper(DriveController *driveController);
-	void SetRef(double refs[][5]);
+	void SetRef(double refs[][12]);
 	double GetRef();
 	static void HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading, DriveController *driveController);
 	void DisableThreads();

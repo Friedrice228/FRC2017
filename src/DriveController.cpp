@@ -116,9 +116,10 @@ double kick_error_vel = 0;
 double timetokeep = 0.01;
 
 const int NUM_POINTS = 1500;
-const int NUM_INDEX = 11;
+const int NUM_INDEX = 12;
 
-double drive_ref[NUM_INDEX] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+double drive_ref[NUM_INDEX] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0 };
 double full_refs[NUM_POINTS][NUM_INDEX];
 
 double acceptable_yaw_error = .22;
@@ -132,7 +133,11 @@ int index1 = 0;
 
 int *ptr_index = &index1;
 
-DriveController::DriveController() {
+Vision *vision_dc = new Vision();
+
+DriveController::DriveController(Vision *vis) {
+
+	vision_dc = vis;
 
 	canTalonFrontLeft = new CANTalon(CAN_TALON_FRONT_LEFT);
 
@@ -282,7 +287,7 @@ void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 
 	double target_heading = joyWheel->GetX() * (90.0 * PI / 180.0); //scaling, conversion to degrees
 
-	double current_heading = ahrs->GetYaw() * ( PI / 180.0);
+	double current_heading = ahrs->GetYaw() * ( PI / 180.0);//radians to degrees
 
 	double error_heading = target_heading - current_heading;
 
@@ -299,7 +304,9 @@ void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 
 }
 
-void DriveController::VisionP(double angle) {
+void DriveController::VisionP() {/*aiming*/
+
+	double angle = vision_dc->findAzimuth();
 
 	double normalized_angle = 0;
 
@@ -328,7 +335,7 @@ void DriveController::VisionP(double angle) {
 
 void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 		double ref_yaw, double k_p_right, double k_p_left, double k_p_kick,
-		double k_p_yaw, double k_d_yaw, double target_vel) { //setting velocities
+		double k_p_yaw, double k_d_yaw, double target_vel) { //setting velocities to the talons /|\
 
 	double yaw_rate_current = (double) ahrs->GetRawGyroZ()
 			* (double) ((PI) / 180);
@@ -477,9 +484,9 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 	while (frc::RobotState::IsAutonomous() && frc::RobotState::IsEnabled()) {
 
-		std::this_thread::sleep_for(std::chrono::microseconds(DC_SLEEP_TIME));
+		std::this_thread::sleep_for(std::chrono::microseconds(DC_SLEEP_TIME));//sleep
 
-		if (timerAuton->HasPeriodPassed(timetokeep)) {
+		if (timerAuton->HasPeriodPassed(timetokeep)) {//fills the array
 
 			for (int i = 0; i < sizeof(drive_ref); i++) {
 
@@ -487,13 +494,21 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 			}
 
-			driveController->DrivePID();
+			if (drive_ref[11] == 1.0){ //vision on
+
+				driveController->VisionP();
+
+			}else{ //vision off
+
+				driveController->DrivePID();
+
+			}
 
 			index1++;
 
 		}
 
-		if (index1 >= NUM_POINTS) {
+		if (index1 >= NUM_POINTS) {//stop at the end of the motion profile
 			driveController->StopAll();
 			break;
 		}
@@ -529,9 +544,9 @@ void ::DriveController::DisableThreads() {
 
 }
 
-void DriveController::SetRef(double ref[][5]) {
+void DriveController::SetRef(double ref[][12]) { //each point has 11 indexes
 
-	for (int r = 0; r < (sizeof(full_refs) / sizeof(full_refs[0])); r++) {
+	for (int r = 0; r < (sizeof(full_refs) / sizeof(full_refs[0])); r++) { //filling the array with the .csv file's values
 
 		for (int c = 0; c < (sizeof(full_refs[0]) / sizeof(full_refs[0][0]));
 				c++) {
@@ -549,10 +564,9 @@ int DriveController::GetIndex() {
 	return *ptr_index;
 
 }
-void DriveController::ResetIndex(){
+void DriveController::ResetIndex() {
 
 	index1 = 0;
 
 }
-
 

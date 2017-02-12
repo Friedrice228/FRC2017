@@ -8,7 +8,7 @@
 #include <Autonomous.h>
 
 const int NUM_POINTS = 1500;
-const int NUM_INDEX = 11;
+const int NUM_INDEX = 12;
 
 double refs[NUM_POINTS][NUM_INDEX];
 
@@ -32,37 +32,34 @@ void Autonomous::RunAuton() {
 
 	int index = drive_controller->GetIndex();
 
-	if(refs[index][7] == 1.0){
+	if(refs[index][7] == 1.0){ // piston
 		gear_rail_au->gear_rail_state = gear_rail_au->open_state_h;
-	}
-	else{
+	}else{
 		gear_rail_au->gear_rail_state = gear_rail_au->close_state_h;
 	}
 
-	if(refs[index][8] == 1.0){
+	if(refs[index][8] == 1.0){ //Flywheel
 		fly_wheel_au->flywheel_state = fly_wheel_au->spin_state_h;
-	}
-	else{
+	}else{
 		fly_wheel_au->flywheel_state = fly_wheel_au->stop_state_h;
 	}
 
-	if(refs[index][9] == 1.0){
+	if(refs[index][9] == 1.0){ //Conveyor
 		conveyor_au->conveyor_state = conveyor_au->load_state_h;
-	}
-	else{
+	}else{
 		conveyor_au->conveyor_state = conveyor_au->stop_state_h;
 	}
 
-	if(refs[index][10] == 1.0){
+	if(refs[index][10] == 1.0){ //Elevator
 		elevator_au->elevator_state = elevator_au->elevate_state_h;
-	}
-	else{
+	}else{
 		elevator_au->elevator_state = elevator_au->stop_state_h;
 	}
+
 }
 
 
-void Autonomous::FillProfile(std::string profileName) {
+void Autonomous::FillProfile(std::string profileName) { //fill array
 
 	int r = 0;
 	std::fstream file(profileName, std::ios::in);
