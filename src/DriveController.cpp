@@ -6,6 +6,7 @@
  */
 
 #include <DriveController.h>
+#include <WPILib.h>
 
 #define PI 3.1415926
 
@@ -19,7 +20,7 @@ double DYN_MAX_Y_RPM = 480;
 const double MAX_X_RPM = 300; // Max RPM ACTUAL: 330
 const double MAX_YAW_RATE = (17.8 / 508) * MAX_Y_RPM; //max angular velocity divided by the max rpm multiplied by set max rpm
 
-const int DC_SLEEP_TIME = 1;
+const int DC_SLEEP_TIME = 500;
 
 const int CAN_TALON_FRONT_LEFT = 18;
 const int CAN_TALON_BACK_LEFT = 22;
@@ -39,7 +40,7 @@ const double K_D_YAW_AU = 0.0;
 
 const double K_P_YAW_H_VEL = 37.0; //17.0
 
-const double K_P_YAW_HEADING_POS = 6.668;
+const double K_P_YAW_HEADING_POS = 8.668;
 
 const double K_P_LEFT_VEL = 0.0014; // 0.0035 has oscillation on ground big
 const double K_F_LEFT_VEL = 1.0 / 508.0; // 0.1 too low
@@ -114,8 +115,11 @@ double kick_error_vel = 0;
 
 double timetokeep = 0.01;
 
-double drive_ref[5] = { 0.0, 0.0, 0.0, 0.0, 0.0 };
-double full_refs[300][5];
+const int NUM_POINTS = 1500;
+const int NUM_INDEX = 11;
+
+double drive_ref[NUM_INDEX] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+double full_refs[NUM_POINTS][NUM_INDEX];
 
 double acceptable_yaw_error = .22;
 
@@ -442,7 +446,7 @@ bool *is_heading, DriveController *driveController) {
 				&& !(bool) *is_heading) {
 
 			std::this_thread::sleep_for(
-					std::chrono::milliseconds(DC_SLEEP_TIME));
+					std::chrono::microseconds(DC_SLEEP_TIME));
 
 			if (timerTeleop->HasPeriodPassed(timetokeep)) {
 
@@ -454,7 +458,7 @@ bool *is_heading, DriveController *driveController) {
 				&& (bool) *is_heading) {
 
 			std::this_thread::sleep_for(
-					std::chrono::milliseconds(DC_SLEEP_TIME));
+					std::chrono::microseconds(DC_SLEEP_TIME));
 
 			if (timerTeleop->HasPeriodPassed(timetokeep)) {
 
@@ -473,7 +477,7 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 	while (frc::RobotState::IsAutonomous() && frc::RobotState::IsEnabled()) {
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(DC_SLEEP_TIME));
+		std::this_thread::sleep_for(std::chrono::microseconds(DC_SLEEP_TIME));
 
 		if (timerAuton->HasPeriodPassed(timetokeep)) {
 
@@ -489,7 +493,7 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 		}
 
-		if (index1 >= 300) {
+		if (index1 >= NUM_POINTS) {
 			driveController->StopAll();
 			break;
 		}

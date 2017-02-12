@@ -16,7 +16,7 @@ const int CAN_TALON_FLYWHEEL_FRONT_RIGHT = 33;
 const int CAN_TALON_FLYWHEEL_BACK_RIGHT = 24;
 const int CAN_TALON_FLYWHEEL_FRONT_LEFT = 29;
 const int CAN_TALON_FLYWHEEL_BACK_LEFT = 19;
-const int FLYWHEEL_WAIT_TIME = 10;
+const int FLYWHEEL_WAIT_TIME = 500;
 
 const double RIGHT_F_GAIN = 0.025;
 const double RIGHT_P_GAIN = .01;
@@ -134,7 +134,7 @@ void Flywheel::SpinWrapper(Flywheel *fw, int ref, bool *active) {
 
 		while (*active) {
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
+			std::this_thread::sleep_for(std::chrono::microseconds(FLYWHEEL_WAIT_TIME));
 
 			if (timerFly->HasPeriodPassed(flywheel_time)){
 

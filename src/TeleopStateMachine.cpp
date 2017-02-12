@@ -216,3 +216,10 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 
 }
 
+//sets the state back to the init state
+void TeleopStateMachine::Initialize(){
+
+	state = init_state;
+
+}
+

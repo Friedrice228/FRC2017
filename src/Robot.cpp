@@ -96,7 +96,7 @@ public:
 
 		vision_ = new Vision();
 
-		autonomous_ = new Autonomous(drive_controller);
+		autonomous_ = new Autonomous(drive_controller, elevator_, conveyor_, gear_rail, fly_wheel);
 
 		climber_ = new Climber();
 
@@ -135,36 +135,7 @@ public:
 		drive_controller->ZeroEncs();
 		drive_controller->ZeroI();
 		drive_controller->ahrs->ZeroYaw();
-
 		drive_controller->ResetIndex();
-
-		double refs[300][5];
-		int r = 0;
-		std::fstream file("/home/lvuser/MP.csv", std::ios::in);
-		while (r < 300) {
-			std::string data;
-			std::getline(file, data);
-			std::stringstream iss(data);
-			if (!file.good()) {
-				std::cout << "FAIL" << std::endl;
-			}
-			int i = 0;
-			while (i < 5) {
-				std::string val;
-				std::getline(iss, val, ',');
-				std::stringstream convertor(val);
-				convertor >> refs[r][i];
-				i++;
-			}
-			r++;
-		}
-
-		drive_controller->SetRef(refs);
-		drive_controller->StartAutonThreads();
-
-	}
-
-	void AutonomousPeriodic() {
 
 		if (autoSelected == gearPlacementUsualAuton) {
 
@@ -174,7 +145,7 @@ public:
 
 		} else if (autoSelected == driveForward) {
 
-			autonomous_->DriveForward();
+			autonomous_->FillProfile("/home/lvuser/MP.csv");
 
 		} else if (autoSelected == shootAuton) {
 
@@ -196,11 +167,25 @@ public:
 
 	}
 
+	void AutonomousPeriodic() {
+
+		conveyor_->ConStateMachine();
+		elevator_->ElevatorStateMachine();
+		fly_wheel->FlywheelStateMachine();
+		gear_rail->GearRailStateMachine();
+
+		autonomous_->RunAuton();
+
+	}
+
 	void TeleopInit() {
 
-		drive_controller->StartTeleopThreads(joyThrottle, joyWheel,
-				&is_heading); //starts the drive code
+		//fly_wheel->StartThread(); //starts the speed controller thread
+
+		drive_controller->StartTeleopThreads(joyThrottle, joyWheel, &is_heading); //starts the drive code thread
 		drive_controller->KickerDown();
+
+		teleop_state_machine->Initialize();
 
 	}
 
@@ -233,7 +218,7 @@ public:
 		const int HDrive = 0;
 		const int Heading = 1;
 
-		bool headingDrive = joyThrottle->GetRawButton(2);
+		bool headingDrive = joyWheel->GetRawButton(5);
 
 		switch (driveMode) {
 

@@ -7,53 +7,87 @@
 
 #include <Autonomous.h>
 
+const int NUM_POINTS = 1500;
+const int NUM_INDEX = 11;
+
+double refs[NUM_POINTS][NUM_INDEX];
+
 DriveController *drive_controller;
+Elevator *elevator_au;
+Conveyor *conveyor_au;
+GearRail *gear_rail_au;
+Flywheel *fly_wheel_au;
 
-
-Autonomous::Autonomous(DriveController *drive_controller_pass) {
+Autonomous::Autonomous(DriveController *drive_controller_pass, Elevator *elevator_pass, Conveyor *conveyor_pass, GearRail *gear_rail_pass, Flywheel *fly_wheel_pass) {
 
 	drive_controller = drive_controller_pass;
+	elevator_au = elevator_pass;
+	conveyor_au = conveyor_pass;
+	gear_rail_au = gear_rail_pass;
+	fly_wheel_au = fly_wheel_pass;
 
 }
 
-void Autonomous::DriveForward() {
+void Autonomous::RunAuton() {
 
 	int index = drive_controller->GetIndex();
-	std::cout << index <<std::endl;
 
-}
+	if(refs[index][7] == 1.0){
+		gear_rail_au->gear_rail_state = gear_rail_au->open_state_h;
+	}
+	else{
+		gear_rail_au->gear_rail_state = gear_rail_au->close_state_h;
+	}
 
-void Autonomous::GearPlacementUsualAuton() {
+	if(refs[index][8] == 1.0){
+		fly_wheel_au->flywheel_state = fly_wheel_au->spin_state_h;
+	}
+	else{
+		fly_wheel_au->flywheel_state = fly_wheel_au->stop_state_h;
+	}
 
-}
+	if(refs[index][9] == 1.0){
+		conveyor_au->conveyor_state = conveyor_au->load_state_h;
+	}
+	else{
+		conveyor_au->conveyor_state = conveyor_au->stop_state_h;
+	}
 
-void Autonomous::GearPlacementLeft() {
-
-}
-
-void Autonomous::GearPlacementRight() {
-
-}
-
-void Autonomous::GearPlacementDriveAuton() {
-
-}
-
-void Autonomous::ShootAutonRed() {
-
-}
-
-void Autonomous::ShootAutonBlue() {
-
-}
-
-void Autonomous::ShootAndLoadAutonBlue() {
-
-}
-
-void Autonomous::ShootAndLoadAutonRed() {
-
+	if(refs[index][10] == 1.0){
+		elevator_au->elevator_state = elevator_au->elevate_state_h;
+	}
+	else{
+		elevator_au->elevator_state = elevator_au->stop_state_h;
+	}
 }
 
 
+void Autonomous::FillProfile(std::string profileName) {
+
+	int r = 0;
+	std::fstream file(profileName, std::ios::in);
+	while (r < NUM_POINTS) {
+		std::string data;
+		std::getline(file, data);
+		std::stringstream iss(data);
+		if (!file.good()) {
+			std::cout << "FAIL" << std::endl;
+		}
+		int i = 0;
+		while (i < NUM_INDEX) {
+			std::string val;
+			std::getline(iss, val, ',');
+			std::stringstream convertor(val);
+			convertor >> refs[r][i];
+			i++;
+		}
+		r++;
+	}
+
+	drive_controller->SetRef(refs);
+	drive_controller->StartAutonThreads();
+
+
+
+}
 
