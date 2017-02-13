@@ -49,7 +49,8 @@ public:
 	void SetRef(double refs[][12]);
 	double GetRef();
 	static void HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading, DriveController *driveController);
-	void DisableThreads();
+	void DisableTeleopThreads();
+	void DisableAutonThreads();
 };
 
 #endif /* SRC_DRIVECONTROLLER_H_ */

@@ -12,7 +12,7 @@
 
 using namespace std::chrono;
 
-const double WHEEL_RADIUS = 4.0; //inches
+const double WHEEL_DIAMETER = 4.0; //inches
 const double TICKS_PER_ROT = 4096;
 
 const double MAX_Y_RPM = 480;
@@ -38,15 +38,15 @@ const double K_P_YAW_T = 40.0;
 const double K_P_YAW_AU = 55.0;
 const double K_D_YAW_AU = 0.0;
 
-const double K_P_YAW_H_VEL = 37.0; //17.0
+const double K_P_YAW_H_VEL = 37.0;
 
 const double K_P_YAW_HEADING_POS = 8.668;
 
-const double K_P_LEFT_VEL = 0.0014; // 0.0035 has oscillation on ground big
-const double K_F_LEFT_VEL = 1.0 / 508.0; // 0.1 too low
+const double K_P_LEFT_VEL = 0.0014;
+const double K_F_LEFT_VEL = 1.0 / 508.0;
 double P_LEFT_VEL = 0;
 
-const double K_P_RIGHT_VEL = 0.0014; //0.004 too big wheels off the ground (250 RPM) / 0.001 too small / 0.003 too small still (300 RPM) / 0.0035 small (300) / 0.003 big
+const double K_P_RIGHT_VEL = 0.0014;
 const double K_F_RIGHT_VEL = 1.0 / 508.0;
 double P_RIGHT_VEL = 0;
 
@@ -61,8 +61,8 @@ const double K_P_RIGHT_DIS = 0.45;
 const double K_P_LEFT_DIS = 0.45;
 const double K_P_KICKER_DIS = 0.0;
 
-const double K_I_RIGHT_DIS = 0.000; //5;
-const double K_I_LEFT_DIS = 0.000; //5;
+const double K_I_RIGHT_DIS = 0.000;
+const double K_I_LEFT_DIS = 0.000;
 const double K_I_KICKER_DIS = 0.0;
 
 const double K_D_RIGHT_DIS = 0.0;
@@ -131,7 +131,7 @@ std::thread HDriveThread, DrivePIDThread;
 
 int index1 = 0;
 
-int *ptr_index = &index1;
+int *ptr_index = &index1; //setting pointer to index
 
 Vision *vision_dc = new Vision();
 
@@ -159,13 +159,13 @@ DriveController::DriveController(Vision *vis) {
 
 }
 
-void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) { //finds targets for TeleOp
+void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) { //finds targets for teleop
 
 	double target_l, target_r, target_kick, target_yaw_rate;
 
 	double axis_ratio = 0.0; //ratio between x and y axes
 
-	if (JoyThrottle->GetX() != 0) { //if x is 0, it i	s undefined (division)
+	if (JoyThrottle->GetX() != 0) { //if x is 0, it is undefined (division)
 		axis_ratio = std::abs(JoyThrottle->GetY() / JoyThrottle->GetX()); //dont use regular abs, that returns an int
 		DYN_MAX_Y_RPM = MAX_X_RPM * (double) axis_ratio;
 		DYN_MAX_Y_RPM = DYN_MAX_Y_RPM > MAX_Y_RPM ? MAX_Y_RPM : DYN_MAX_Y_RPM; //if DYN_max_Y is bigger than MAX_Y then set to MAX_Y, otherwise keep DYN_MAX_Y
@@ -218,12 +218,12 @@ void DriveController::DrivePID() { //finds targets for Auton
 
 	//conversion to feet
 	double r_dis = -(((double) canTalonFrontRight->GetEncPosition()
-			/ TICKS_PER_ROT) * (WHEEL_RADIUS * PI) / 12);
+			/ TICKS_PER_ROT) * (WHEEL_DIAMETER * PI) / 12);
 	double l_dis = (((double) canTalonFrontLeft->GetEncPosition()
-			/ TICKS_PER_ROT) * (WHEEL_RADIUS * PI) / 12);
+			/ TICKS_PER_ROT) * (WHEEL_DIAMETER * PI) / 12);
 
 	double k_dis = -(((double) canTalonKicker->GetEncPosition() / TICKS_PER_ROT)
-			* (WHEEL_RADIUS * PI) / 12);
+			* (WHEEL_DIAMETER * PI) / 12);
 
 	l_error_dis_au = refLeft - l_dis;
 	r_error_dis_au = refRight - r_dis;
@@ -304,7 +304,7 @@ void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 
 }
 
-void DriveController::VisionP() {/*aiming*/
+void DriveController::VisionP() { //auto-aiming
 
 	double angle = vision_dc->findAzimuth();
 
@@ -335,7 +335,7 @@ void DriveController::VisionP() {/*aiming*/
 
 void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 		double ref_yaw, double k_p_right, double k_p_left, double k_p_kick,
-		double k_p_yaw, double k_d_yaw, double target_vel) { //setting velocities to the talons /|\
+		double k_p_yaw, double k_d_yaw, double target_vel) { //setting talons
 
 	double yaw_rate_current = (double) ahrs->GetRawGyroZ()
 			* (double) ((PI) / 180);
@@ -480,13 +480,11 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 	timerAuton->Start();
 
-//	int index1 = 0;
-
 	while (frc::RobotState::IsAutonomous() && frc::RobotState::IsEnabled()) {
 
-		std::this_thread::sleep_for(std::chrono::microseconds(DC_SLEEP_TIME));//sleep
+		std::this_thread::sleep_for(std::chrono::microseconds(DC_SLEEP_TIME));
 
-		if (timerAuton->HasPeriodPassed(timetokeep)) {//fills the array
+		if (timerAuton->HasPeriodPassed(timetokeep)) {
 
 			for (int i = 0; i < sizeof(drive_ref); i++) {
 
@@ -508,7 +506,7 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 		}
 
-		if (index1 >= NUM_POINTS) {//stop at the end of the motion profile
+		if (index1 >= NUM_POINTS) { //stop at the end of the motion profile
 			driveController->StopAll();
 			break;
 		}
@@ -537,10 +535,15 @@ void DriveController::StartAutonThreads() {
 
 }
 
-void ::DriveController::DisableThreads() {
+void DriveController::DisableTeleopThreads() {
+
+	HDriveThread.~thread();
+
+}
+
+void DriveController::DisableAutonThreads(){
 
 	DrivePIDThread.~thread();
-	HDriveThread.~thread();
 
 }
 
