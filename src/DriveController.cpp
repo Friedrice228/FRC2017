@@ -488,7 +488,7 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 			for (int i = 0; i < sizeof(drive_ref); i++) {
 
-				drive_ref[i] = full_refs[index1][i];
+				drive_ref[i] = full_refs[index1][i]; //for SetRefs()
 
 			}
 
@@ -549,7 +549,7 @@ void DriveController::DisableAutonThreads(){
 
 void DriveController::SetRef(double ref[][12]) { //each point has 11 indexes
 
-	for (int r = 0; r < (sizeof(full_refs) / sizeof(full_refs[0])); r++) { //filling the array with the .csv file's values
+	for (int r = 0; r < (sizeof(full_refs) / sizeof(full_refs[0])); r++) {
 
 		for (int c = 0; c < (sizeof(full_refs[0]) / sizeof(full_refs[0][0]));
 				c++) {

@@ -262,7 +262,7 @@ public:
 
 	void DisabledInit() {
 
-		drive_controller->DisableThreads();
+		//drive_controller->DisableThreads();
 
 		fly_wheel->DisableThreads();
 
