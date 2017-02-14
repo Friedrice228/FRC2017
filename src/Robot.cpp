@@ -130,7 +130,7 @@ public:
 
 		allianceSelected = allianceChooser.GetSelected();
 
-		//fly_wheel->StartThread(); //starts the speed controller
+		fly_wheel->StartThread(); //starts the speed controller
 
 		drive_controller->ZeroEncs();
 		drive_controller->ZeroI();
@@ -180,12 +180,14 @@ public:
 
 	void TeleopInit() {
 
-		//fly_wheel->StartThread(); //starts the speed controller thread
+		fly_wheel->StartThread(); //starts the speed controller thread
 
 		drive_controller->StartTeleopThreads(joyThrottle, joyWheel, &is_heading); //starts the drive code thread
 		drive_controller->KickerDown();
 
-		teleop_state_machine->Initialize();
+		teleop_state_machine->Initialize(); //sets the state back to init
+
+		drive_controller->DisableAutonThreads();
 
 	}
 
@@ -206,8 +208,8 @@ public:
 				climb_button, return_button, popcorn_button,
 				second_fire_button);
 
-//		light_->LEDStateMachine(gear_light_button, ball_light_button,
-//				gear_and_ball_light_button);
+		light_->LEDStateMachine(gear_light_button, ball_light_button,
+				gear_and_ball_light_button);
 		conveyor_->ConStateMachine();
 		elevator_->ElevatorStateMachine();
 		fly_wheel->FlywheelStateMachine();
@@ -262,7 +264,7 @@ public:
 
 	void DisabledInit() {
 
-		//drive_controller->DisableThreads();
+		drive_controller->DisableTeleopThreads();
 
 		fly_wheel->DisableThreads();
 

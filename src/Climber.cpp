@@ -9,33 +9,29 @@
 
 const int stop_state = 0;
 const int climbing_state = 1;
-const int CAN_TALON_CLIMBER_RIGHT = 55;
-const int CAN_TALON_CLIMBER_LEFT = 99; //doesntexist
+const int CAN_TALON_CLIMBER = 55;
 const double CLIMBING_SPEED = .5;
 
 Climber::Climber() { // not climbing back down - sean
 
-	canTalonClimberRight = new CANTalon(CAN_TALON_CLIMBER_RIGHT); //intake
-	canTalonClimberLeft = new CANTalon(CAN_TALON_CLIMBER_LEFT); //flywheel
+	canTalonClimber = new CANTalon(CAN_TALON_CLIMBER);
 
 }
 
 void Climber::Climbing(double speed) {
 
-	canTalonClimberRight->Set(speed);
-	canTalonClimberLeft->Set(-speed);
+	canTalonClimber->Set(speed);
 }
 
 void Climber::Stop() {
 
-	canTalonClimberRight->Set(0);
-	canTalonClimberLeft->Set(0);
+	canTalonClimber->Set(0);
 
 }
 
 double Climber::CheckCurrent(){
 
-	return (double)(canTalonClimberRight->GetOutputCurrent());
+	return (double)(canTalonClimber->GetOutputCurrent());
 
 
 }
@@ -52,7 +48,6 @@ void Climber::ClimberStateMachine(){
 
 	case climbing_state:
 
-	//	std::cout << canTalonClimberRight->GetOutputCurrent() << std::endl;
 		Climbing(CLIMBING_SPEED);
 
 		break;

@@ -28,7 +28,7 @@ Autonomous::Autonomous(DriveController *drive_controller_pass, Elevator *elevato
 
 }
 
-void Autonomous::RunAuton() {
+void Autonomous::RunAuton() { // runs continuously through all autonomous modes
 
 	int index = drive_controller->GetIndex();
 

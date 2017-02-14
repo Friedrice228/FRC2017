@@ -13,7 +13,7 @@
 class Climber {
 public:
 
-	CANTalon *canTalonClimberLeft, *canTalonClimberRight;
+	CANTalon *canTalonClimber;
 
 	Climber();
 	void Climbing(double speed);

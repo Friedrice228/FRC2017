@@ -33,6 +33,8 @@ double r_last_error = 0;
 double yaw_last_error = 0;
 double kick_last_error = 0;
 
+//CHANGEABLESTART
+
 const double K_P_YAW_T = 40.0;
 
 const double K_P_YAW_AU = 55.0;
@@ -69,6 +71,8 @@ const double K_D_RIGHT_DIS = 0.0;
 const double K_D_LEFT_DIS = 0.0;
 const double K_D_KICKER_DIS = 0.0;
 
+//CHANGEABLE END
+
 const double MAX_FPS = ((MAX_Y_RPM * 4 * PI) / 12.0) / 60; //conversion to fps
 const double Kv = 1 / MAX_FPS; //scale from -1 to 1
 
@@ -94,8 +98,6 @@ double i_left = 0;
 
 double d_kick = 0;
 double i_kick = 0;
-
-double P_HEADING = 0;
 
 double l_error_vel_au = 0;
 double l_error_dis_au = 0;
@@ -204,7 +206,7 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) { //find
 }
 
 /*
- * Param: Feet forward, + forward
+ * Param: Feet forward, + = forward
  */
 void DriveController::DrivePID() { //finds targets for Auton
 
