@@ -132,12 +132,12 @@ public:
 
 		fly_wheel->StartThread(); //starts the speed controller
 
-		drive_controller->ZeroEncs();
+		drive_controller->ZeroEncs(); //reset everything
 		drive_controller->ZeroI();
 		drive_controller->ahrs->ZeroYaw();
 		drive_controller->ResetIndex();
 
-		if (autoSelected == gearPlacementUsualAuton) {
+		if (autoSelected == gearPlacementUsualAuton) { //choose auton sequence
 
 		} else if (autoSelected == gearPlacementRight) {
 

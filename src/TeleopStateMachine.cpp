@@ -63,12 +63,12 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 	if (is_popcorn) {
 
 		elevator_->elevator_state = elevator_->reverse_state_h;
-		conveyor_->conveyor_state = conveyor_->popcorn_state_h;
+		//conveyor_->conveyor_state = conveyor_->popcorn_state_h; // not using conveyor anymore
 
 	} else if (!is_popcorn && state != fire_state) {
 
 		elevator_->elevator_state = elevator_->stop_state_h;
-		conveyor_->conveyor_state = conveyor_->stop_state_h;
+		//conveyor_->conveyor_state = conveyor_->stop_state_h;
 
 	}
 
@@ -149,11 +149,11 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 		if (is_popcorn) {
 
 			elevator_->elevator_state = elevator_->reverse_state_h;
-			conveyor_->conveyor_state = conveyor_->popcorn_state_h;
+			//conveyor_->conveyor_state = conveyor_->popcorn_state_h;
 
 		} else {
 
-			conveyor_->conveyor_state = conveyor_->load_state_h;
+			//conveyor_->conveyor_state = conveyor_->load_state_h;
 			elevator_->elevator_state = elevator_->elevate_state_h;
 
 		}

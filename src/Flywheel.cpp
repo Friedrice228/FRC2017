@@ -70,6 +70,7 @@ void Flywheel::Spin(int ref) {
 
 void Flywheel::Stop() {
 
+	canTalonFlywheelFrontRight->SetControlMode(CANSpeedController::kVoltage);
 	canTalonFlywheelFrontRight->Set(0);
 
 }
