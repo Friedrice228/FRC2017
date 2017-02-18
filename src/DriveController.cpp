@@ -20,7 +20,7 @@ double DYN_MAX_Y_RPM = 480;
 const double MAX_X_RPM = 300; // Max RPM ACTUAL: 330
 const double MAX_YAW_RATE = (17.8 / 508) * MAX_Y_RPM; //max angular velocity divided by the max rpm multiplied by set max rpm
 
-const int DC_SLEEP_TIME = 500;
+const int DC_SLEEP_TIME = 10;
 
 const int CAN_TALON_FRONT_LEFT = 18;
 const int CAN_TALON_BACK_LEFT = 22;
@@ -175,14 +175,13 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) { //find
 		DYN_MAX_Y_RPM = MAX_Y_RPM; //deals with special case tht x = 0 (ratio cant divide by zero)
 	}
 
-	target_l = -1.0 * (JoyThrottle->GetY() < 0 ? -1 : 1)
-			* (JoyThrottle->GetY() * JoyThrottle->GetY()) * DYN_MAX_Y_RPM; //if joy value is less than 0 set to -1, otherwise to 1
+	target_l = -1.0 * (JoyThrottle->GetY() < 0 ? -1 : 1) * (JoyThrottle->GetY() * JoyThrottle->GetY()) * DYN_MAX_Y_RPM;//if joy value is less than 0 set to -1, otherwise to 1
+
 	target_r = target_l;
 
-	target_kick = (JoyThrottle->GetX() < 0 ? -1 : 1)
-			* (JoyThrottle->GetX() * JoyThrottle->GetX()) * MAX_X_RPM; //if joy value is less than 0 set to -1, otherwise to 1
+	target_kick = (JoyThrottle->GetX() < 0 ? -1 : 1) * (JoyThrottle->GetX() * JoyThrottle->GetX()) * MAX_X_RPM; //if joy value is less than 0 set to -1, otherwise to 1
 
-	target_yaw_rate = (JoyWheel->GetX()) * MAX_YAW_RATE;
+	target_yaw_rate = -(JoyWheel->GetX()) * MAX_YAW_RATE; //Left will be positive
 
 	if (abs(target_kick) < 35) {
 		target_kick = 0;
@@ -215,8 +214,6 @@ void DriveController::DrivePID() { //finds targets for Auton
 	double refKick = drive_ref[2];
 	double targetYawRate = drive_ref[3];
 	double tarVel = drive_ref[4];
-
-//	std::cout << "Right: " << canTalonFrontRight->Get() << std::endl;
 
 	//conversion to feet
 	double r_dis = -(((double) canTalonFrontRight->GetEncPosition()
@@ -287,9 +284,9 @@ void DriveController::DrivePID() { //finds targets for Auton
  */
 void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 
-	double target_heading = joyWheel->GetX() * (90.0 * PI / 180.0); //scaling, conversion to degrees
+	double target_heading = -1.0 * joyWheel->GetX() * (90.0 * PI / 180.0); //scaling, conversion to degrees,left should be positive
 
-	double current_heading = ahrs->GetYaw() * ( PI / 180.0);//radians to degrees
+	double current_heading = -1.0 * ahrs->GetYaw() * ( PI / 180.0);//radians to degrees, left should be positive
 
 	double error_heading = target_heading - current_heading;
 
@@ -339,8 +336,7 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 		double ref_yaw, double k_p_right, double k_p_left, double k_p_kick,
 		double k_p_yaw, double k_d_yaw, double target_vel) { //setting talons
 
-	double yaw_rate_current = (double) ahrs->GetRawGyroZ()
-			* (double) ((PI) / 180);
+	double yaw_rate_current = -1.0 * (double) ahrs->GetRawGyroZ() * (double) ((PI) / 180); //Left should be positive
 
 	double target_yaw_rate = ref_yaw;
 
@@ -349,7 +345,7 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 
 	double yaw_error = target_yaw_rate - yaw_rate_current;
 
-	if (std::abs(yaw_error) < .35) {
+	if (std::abs(yaw_error) < .25) {
 		yaw_error = 0;
 	}
 
@@ -357,10 +353,10 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 
 	double yaw_output = ((k_p_yaw * yaw_error) + (k_d_yaw * d_yaw_dis));
 
-	ref_right -= yaw_output;
-	ref_left += yaw_output;
+	ref_right += yaw_output; //left should be positive
+	ref_left -= yaw_output;
 
-	if (abs(ref_kick) < 35) {
+	if (abs(ref_kick) < 25) {
 		ref_kick = 0;
 	}
 
@@ -455,7 +451,7 @@ bool *is_heading, DriveController *driveController) {
 				&& !(bool) *is_heading) {
 
 			std::this_thread::sleep_for(
-					std::chrono::microseconds(DC_SLEEP_TIME));
+					std::chrono::milliseconds(DC_SLEEP_TIME));
 
 			if (timerTeleop->HasPeriodPassed(timetokeep)) {
 
@@ -467,7 +463,7 @@ bool *is_heading, DriveController *driveController) {
 				&& (bool) *is_heading) {
 
 			std::this_thread::sleep_for(
-					std::chrono::microseconds(DC_SLEEP_TIME));
+					std::chrono::milliseconds(DC_SLEEP_TIME));
 
 			if (timerTeleop->HasPeriodPassed(timetokeep)) {
 
@@ -484,7 +480,7 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 	while (frc::RobotState::IsAutonomous() && frc::RobotState::IsEnabled()) {
 
-		std::this_thread::sleep_for(std::chrono::microseconds(DC_SLEEP_TIME));
+		std::this_thread::sleep_for(std::chrono::milliseconds(DC_SLEEP_TIME));
 
 		if (timerAuton->HasPeriodPassed(timetokeep)) {
 

@@ -45,10 +45,12 @@ public:
 	void ZeroI();
 	int GetIndex();
 	void ResetIndex();
-	static void DrivePIDWrapper(DriveController *driveController);
 	void SetRef(double refs[][12]);
 	double GetRef();
+
+	static void DrivePIDWrapper(DriveController *driveController);
 	static void HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading, DriveController *driveController);
+
 	void DisableTeleopThreads();
 	void DisableAutonThreads();
 };

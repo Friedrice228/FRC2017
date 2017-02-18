@@ -35,6 +35,7 @@ public:
 	Autonomous *autonomous_;
 	Climber *climber_;
 	LEDLightStrip *light_;
+	Compressor *compressor;
 
 	const int JOY_OP = 1;
 	const int JOY_THROTTLE = 0;
@@ -45,12 +46,14 @@ public:
 	const int BALL_LIGHT_BUTTON = 9;
 	const int GEAR_AND_BALL_LIGHT_BUTTON = 10;
 
-	const int CLIMB_BUTTON = 6;
-	const int GEAR_BUTTON = 5;
-	const int FIRE_BUTTON = 7;
+	const int CLIMB_BUTTON = 12;
+	const int GEAR_BUTTON = 7;
+	const int GEAR_CLOSE_BUTTON = 8;
+	const int FIRE_BUTTON = 4;
 	const int RETURN_BUTTON = 3;
-	const int POPCORN_BUTTON = 4;
-	const int FIRE_BUTTON_2 = 10;
+	const int POPCORN_BUTTON = 2;
+	const int FIRE_BUTTON_2 = 1;
+	const int STOP_SHOOT_BUTTON = 5;
 
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
@@ -121,6 +124,9 @@ public:
 		frc::SmartDashboard::PutData("Alliance", &allianceChooser);
 
 		is_heading = false;
+
+		compressor = new Compressor(31);
+		compressor->SetClosedLoopControl(true);
 
 	} // RobotInit
 
@@ -194,6 +200,8 @@ public:
 	void TeleopPeriodic() {
 
 		bool gear_button = joyOp->GetRawButton(GEAR_BUTTON);
+		bool gear_close_button = joyOp->GetRawButton(GEAR_CLOSE_BUTTON);//M#
+		bool stop_shoot_button = joyOp->GetRawButton(STOP_SHOOT_BUTTON);
 		bool fire_button = joyOp->GetRawButton(FIRE_BUTTON);
 		bool climb_button = joyOp->GetRawButton(CLIMB_BUTTON);
 		bool return_button = joyOp->GetRawButton(RETURN_BUTTON);
@@ -204,12 +212,12 @@ public:
 		bool popcorn_button = joyOp->GetRawButton(POPCORN_BUTTON);
 		bool second_fire_button = joyOp->GetRawButton(FIRE_BUTTON_2);
 
-		teleop_state_machine->StateMachine(gear_button, fire_button,
+		teleop_state_machine->StateMachine(gear_button, gear_close_button, fire_button,
 				climb_button, return_button, popcorn_button,
-				second_fire_button);
+				second_fire_button, stop_shoot_button);
 
-		light_->LEDStateMachine(gear_light_button, ball_light_button,
-				gear_and_ball_light_button);
+		//light_->LEDStateMachine(gear_light_button, ball_light_button,
+		//		gear_and_ball_light_button);
 		conveyor_->ConStateMachine();
 		elevator_->ElevatorStateMachine();
 		fly_wheel->FlywheelStateMachine();

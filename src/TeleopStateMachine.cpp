@@ -47,8 +47,8 @@ TeleopStateMachine::TeleopStateMachine(Flywheel *flywheelP, Conveyor *conveyorP,
 
 }
 
-void TeleopStateMachine::StateMachine(bool is_gear, bool is_fire, bool is_climb,
-bool is_ret, bool is_popcorn, bool second_fire_button) {
+void TeleopStateMachine::StateMachine(bool is_gear, bool is_close_gear, bool is_fire, bool is_climb,
+bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 
 	if (fly_wheel->IsAtSpeed()) {
 
@@ -60,15 +60,16 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 
 	}
 
+	SmartDashboard::PutNumber("FlyWheel Speed", fly_wheel->GetSpeed());
+
 	if (is_popcorn) {
 
 		elevator_->elevator_state = elevator_->reverse_state_h;
-		//conveyor_->conveyor_state = conveyor_->popcorn_state_h; // not using conveyor anymore
+
 
 	} else if (!is_popcorn && state != fire_state) {
 
 		elevator_->elevator_state = elevator_->stop_state_h;
-		//conveyor_->conveyor_state = conveyor_->stop_state_h;
 
 	}
 
@@ -76,7 +77,7 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 
 		gear_rail->gear_rail_state = gear_rail->open_state_h;
 
-	} else {
+	} else if (is_close_gear) {
 
 		gear_rail->gear_rail_state = gear_rail->close_state_h;
 	}
@@ -88,6 +89,8 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 	case init_state:
 
 		SmartDashboard::PutString("State", "Initial");
+
+		gear_rail->gear_rail_state = gear_rail->close_state_h;
 
 		fly_wheel->flywheel_state = fly_wheel->stop_state_h;
 
@@ -104,8 +107,6 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 		SmartDashboard::PutString("State", "Wait For Button");
 
 		fly_wheel->flywheel_state = fly_wheel->stop_state_h;
-
-		elevator_->elevator_state = elevator_->stop_state_h;
 
 		climber_->climber_state = climber_->stop_state_h;
 
@@ -127,15 +128,15 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 
 		fly_wheel->flywheel_state = fly_wheel->spin_state_h;
 
-		std::cout << fly_wheel->FlywheelValue() << std::endl;
+		elevator_->elevator_state = elevator_->stop_state_h;
 
-		if (!is_fire) {
+		if (is_stop_shoot) {
 
 			state = wait_for_button_state;
 
 		}
 
-		if (fly_wheel->IsAtSpeed() && second_fire_button) {
+		if (fly_wheel->IsAtSpeed() && is_second_fire) {
 
 			state = fire_state;
 		}
@@ -149,18 +150,22 @@ bool is_ret, bool is_popcorn, bool second_fire_button) {
 		if (is_popcorn) {
 
 			elevator_->elevator_state = elevator_->reverse_state_h;
-			//conveyor_->conveyor_state = conveyor_->popcorn_state_h;
 
 		} else {
 
-			//conveyor_->conveyor_state = conveyor_->load_state_h;
 			elevator_->elevator_state = elevator_->elevate_state_h;
 
 		}
 
-		if (!is_fire) {
+		if (is_stop_shoot) {
 
 			state = wait_for_button_state;
+
+			elevator_->elevator_state = elevator_->stop_state_h;
+
+		}else if (!is_second_fire){
+
+			state = init_shooting_state;
 
 		}
 

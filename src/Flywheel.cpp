@@ -9,17 +9,17 @@
 const int stop_state = 0;
 const int spin_state = 1;
 
-const int GOAL_RPM = 2500;
+const int GOAL_RPM = 3200;
 
-const int MAX_FLYWHEEL_ERROR = 300;
+const int MAX_FLYWHEEL_ERROR = 400;
 const int CAN_TALON_FLYWHEEL_FRONT_RIGHT = 33;
 const int CAN_TALON_FLYWHEEL_BACK_RIGHT = 24;
 const int CAN_TALON_FLYWHEEL_FRONT_LEFT = 29;
 const int CAN_TALON_FLYWHEEL_BACK_LEFT = 19;
-const int FLYWHEEL_WAIT_TIME = 500;
+const int FLYWHEEL_WAIT_TIME = 10;
 
-const double RIGHT_F_GAIN = 0.025;
-const double RIGHT_P_GAIN = .01;
+const double RIGHT_F_GAIN = .036; //0.025;
+const double RIGHT_P_GAIN = 0.075;//.01;
 const double LEFT_F_GAIN = 0;
 const double LEFT_P_GAIN = 0;
 const double CONVERSION_DIVISION = 4096;
@@ -43,6 +43,7 @@ Flywheel::Flywheel() {
 	canTalonFlywheelFrontRight->ConfigPeakOutputVoltage(+12.0f, +2.0f);
 	canTalonFlywheelFrontRight->SetSensorDirection(true);
 	canTalonFlywheelFrontRight->SelectProfileSlot(0);
+	canTalonFlywheelFrontRight->SetSensorDirection(true);
 
 	//Set all other motors as slaves that will follow the output of the master
 	canTalonFlywheelFrontLeft = new CANTalon(CAN_TALON_FLYWHEEL_FRONT_LEFT);
@@ -135,7 +136,7 @@ void Flywheel::SpinWrapper(Flywheel *fw, int ref, bool *active) {
 
 		while (*active) {
 
-			std::this_thread::sleep_for(std::chrono::microseconds(FLYWHEEL_WAIT_TIME));
+			std::this_thread::sleep_for(std::chrono::milliseconds(FLYWHEEL_WAIT_TIME));
 
 			if (timerFly->HasPeriodPassed(flywheel_time)){
 

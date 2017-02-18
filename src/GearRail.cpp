@@ -8,29 +8,29 @@
 #include "GearRail.h"
 #include <WPILib.h> //TODO: needs to be included in both for reasons i do not know
 
+const int PCM_CAN_ID = 31;
+
+const int EXPAND_CHANNEL = 0;
+const int RETRACT_CHANNEL = 1;
+
 const int close_state = 0;
 const int open_state = 1;
 
 GearRail::GearRail() {
 
-	gearRailPistonLeft = new DoubleSolenoid(4, 2, 3);   //(4, 4, 5);
-	gearRailPistonRight = new DoubleSolenoid(4, 0, 1); //(4, 3, 2);
-
-
+	gearRailPiston = new DoubleSolenoid(PCM_CAN_ID, EXPAND_CHANNEL, RETRACT_CHANNEL);
 
 }
 
 void GearRail::Open() {
 
-	gearRailPistonLeft->Set(DoubleSolenoid::Value::kReverse);
-	gearRailPistonRight->Set(DoubleSolenoid::Value::kReverse);
+	gearRailPiston->Set(DoubleSolenoid::Value::kReverse);
 
 }
 
 void GearRail::Close() {
 
-	gearRailPistonLeft->Set(DoubleSolenoid::Value::kForward);
-	gearRailPistonRight->Set(DoubleSolenoid::Value::kForward);
+	gearRailPiston->Set(DoubleSolenoid::Value::kForward);
 
 }
 
