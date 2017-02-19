@@ -9,7 +9,8 @@
 const int stop_state = 0;
 const int spin_state = 1;
 
-const int GOAL_RPM = 3200;
+const int GOAL_RPM_ORIGINAL = 3250;
+int GOAL_RPM = 3250;
 
 const int MAX_FLYWHEEL_ERROR = 400;
 const int CAN_TALON_FLYWHEEL_FRONT_RIGHT = 33;
@@ -89,6 +90,18 @@ bool Flywheel::IsAtSpeed() {
 
 		return false;
 	}
+
+}
+
+void Flywheel::SetGoal(double joyVal){
+
+	GOAL_RPM = GOAL_RPM_ORIGINAL + (-1 * 200 * joyVal);
+
+}
+
+int Flywheel::GetGoal(){
+
+	return GOAL_RPM;
 
 }
 

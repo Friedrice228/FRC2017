@@ -73,8 +73,11 @@ const double K_D_KICKER_DIS = 0.0;
 
 //CHANGEABLE END
 
-const double MAX_FPS = ((MAX_Y_RPM * 4 * PI) / 12.0) / 60; //conversion to fps
+const double MAX_FPS = ((MAX_Y_RPM * 4.0 * PI) / 12.0) / 60.0; //conversion to fps
 const double Kv = 1 / MAX_FPS; //scale from -1 to 1
+
+const double MAX_KICK_FPS = (MAX_X_RPM * 4.0 * PI /12.0) /60.0;
+const int Kv_KICK = 1 / MAX_KICK_FPS;
 
 double P_RIGHT_DIS = 0;
 double I_RIGHT_DIS = 0;
@@ -181,7 +184,7 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) { //find
 
 	target_kick = (JoyThrottle->GetX() < 0 ? -1 : 1) * (JoyThrottle->GetX() * JoyThrottle->GetX()) * MAX_X_RPM; //if joy value is less than 0 set to -1, otherwise to 1
 
-	target_yaw_rate = -(JoyWheel->GetX()) * MAX_YAW_RATE; //Left will be positive
+	target_yaw_rate = (JoyWheel->GetX()) * MAX_YAW_RATE; //Left will be positive
 
 	if (abs(target_kick) < 35) {
 		target_kick = 0;
@@ -200,7 +203,7 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) { //find
 	}
 
 	Drive(target_kick, target_r, target_l, target_yaw_rate, K_P_RIGHT_VEL,
-			K_P_LEFT_VEL, K_P_KICK_VEL, K_P_YAW_T, 0.0, 0.0);
+			K_P_LEFT_VEL, K_P_KICK_VEL, K_P_YAW_T, 0.0, 0.0, 0.0, 0.0);
 
 }
 
@@ -213,7 +216,9 @@ void DriveController::DrivePID() { //finds targets for Auton
 	double refRight = drive_ref[1];
 	double refKick = drive_ref[2];
 	double targetYawRate = drive_ref[3];
-	double tarVel = drive_ref[4];
+	double tarVelLeft = drive_ref[4];
+	double tarVelRight = drive_ref[5];
+	double tarVelKick = drive_ref[6];
 
 	//conversion to feet
 	double r_dis = -(((double) canTalonFrontRight->GetEncPosition()
@@ -271,7 +276,7 @@ void DriveController::DrivePID() { //finds targets for Auton
 
 	Drive(target_rpm_kick, target_rpm_right, target_rpm_left, targetYawRate,
 			K_P_RIGHT_VEL, K_P_LEFT_VEL, K_P_KICK_VEL, K_P_YAW_AU, K_D_YAW_AU,
-			tarVel);
+			tarVelLeft, tarVelRight, tarVelKick);
 
 	l_last_error = l_error_dis_au;
 	r_last_error = r_error_dis_au;
@@ -284,9 +289,9 @@ void DriveController::DrivePID() { //finds targets for Auton
  */
 void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 
-	double target_heading = -1.0 * joyWheel->GetX() * (90.0 * PI / 180.0); //scaling, conversion to degrees,left should be positive
+	double target_heading = 1.0 * joyWheel->GetX() * (90.0 * PI / 180.0); //scaling, conversion to degrees,left should be positive
 
-	double current_heading = -1.0 * ahrs->GetYaw() * ( PI / 180.0);//radians to degrees, left should be positive
+	double current_heading = 1.0 * ahrs->GetYaw() * ( PI / 180.0);//radians to degrees, left should be positive
 
 	double error_heading = target_heading - current_heading;
 
@@ -299,7 +304,7 @@ void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 	}
 
 	Drive(0.0, 0.0, 0.0, total_heading, K_P_RIGHT_VEL, K_P_LEFT_VEL,
-			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0);
+			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0, 0.0, 0.0);
 
 }
 
@@ -310,7 +315,7 @@ void DriveController::VisionP() { //auto-aiming
 	double normalized_angle = 0;
 
 	if (angle > 180) {
-		normalized_angle = angle - 360; //will be negative to go left
+		normalized_angle = angle - 360; //will be negative to go left TODO:CHange that
 	} else {
 		normalized_angle = angle;
 	}
@@ -328,15 +333,15 @@ void DriveController::VisionP() { //auto-aiming
 	}
 
 	Drive(0.0, 0.0, 0.0, total_heading, K_P_RIGHT_VEL, K_P_LEFT_VEL,
-			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0);
+			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0, 0.0, 0.0);
 
 }
 
 void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 		double ref_yaw, double k_p_right, double k_p_left, double k_p_kick,
-		double k_p_yaw, double k_d_yaw, double target_vel) { //setting talons
+		double k_p_yaw, double k_d_yaw, double target_vel_left, double target_vel_right, double target_vel_kick) { //setting talons
 
-	double yaw_rate_current = -1.0 * (double) ahrs->GetRawGyroZ() * (double) ((PI) / 180); //Left should be positive
+	double yaw_rate_current = 1.0 * (double) ahrs->GetRawGyroZ() * (double) ((PI) / 180); //Left should be positive
 
 	double target_yaw_rate = ref_yaw;
 
@@ -353,8 +358,8 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 
 	double yaw_output = ((k_p_yaw * yaw_error) + (k_d_yaw * d_yaw_dis));
 
-	ref_right += yaw_output; //left should be positive
-	ref_left -= yaw_output;
+	ref_right -= yaw_output; //left should be positive
+	ref_left += yaw_output;
 
 	if (abs(ref_kick) < 25) {
 		ref_kick = 0;
@@ -392,13 +397,15 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 	P_RIGHT_VEL = k_p_right * r_error_vel_t;
 	P_KICK_VEL = k_p_kick * kick_error_vel;
 
-	double total_right = P_RIGHT_VEL + feed_forward_r + (Kv * target_vel);
-	double total_left = P_LEFT_VEL + feed_forward_l + (Kv * target_vel);
-	double total_kick = P_KICK_VEL + feed_forward_k;
+	double total_right = P_RIGHT_VEL + feed_forward_r + (Kv * target_vel_right);
+	double total_left = P_LEFT_VEL + feed_forward_l + (Kv * target_vel_left);
+	double total_kick = P_KICK_VEL + feed_forward_k + (Kv_KICK * target_vel_kick);
 
 	canTalonFrontLeft->Set(-total_left); //back cantalons follow front, don't need to set them individually
 	canTalonFrontRight->Set(total_right);
 	canTalonKicker->Set(-total_kick);
+
+	std::cout << "Right: " << canTalonFrontRight->Get() << std::endl;
 
 	yaw_last_error = yaw_error;
 
@@ -490,7 +497,7 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 			}
 
-			if (drive_ref[11] == 1.0){ //vision on
+			if (drive_ref[11] == 1){ //vision on TODO: check if 1 needs to be 1.0
 
 				driveController->VisionP();
 

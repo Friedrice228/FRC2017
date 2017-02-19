@@ -9,6 +9,10 @@
 
 const int NUM_POINTS = 1500;
 const int NUM_INDEX = 12;
+const int PISTON_INDEX = 7;
+const int FLYWHEEL_INDEX = 8;
+const int CONVEYOR_INDEX = 9;
+const int ELEVATOR_INDEX = 10;
 
 double refs[NUM_POINTS][NUM_INDEX];
 
@@ -32,25 +36,25 @@ void Autonomous::RunAuton() { // runs continuously through all autonomous modes
 
 	int index = drive_controller->GetIndex();
 
-	if(refs[index][7] == 1.0){ // piston
+	if(refs[index][PISTON_INDEX] == 1){ // piston
 		gear_rail_au->gear_rail_state = gear_rail_au->open_state_h;
 	}else{
 		gear_rail_au->gear_rail_state = gear_rail_au->close_state_h;
 	}
 
-	if(refs[index][8] == 1.0){ //Flywheel
+	if(refs[index][FLYWHEEL_INDEX] == 1){ //Flywheel
 		fly_wheel_au->flywheel_state = fly_wheel_au->spin_state_h;
 	}else{
 		fly_wheel_au->flywheel_state = fly_wheel_au->stop_state_h;
 	}
 
-	if(refs[index][9] == 1.0){ //Conveyor
+	if(refs[index][CONVEYOR_INDEX] == 1){ //Conveyor
 		conveyor_au->conveyor_state = conveyor_au->load_state_h;
 	}else{
 		conveyor_au->conveyor_state = conveyor_au->stop_state_h;
 	}
 
-	if(refs[index][10] == 1.0){ //Elevator
+	if(refs[index][ELEVATOR_INDEX] == 1){ //Elevator
 		elevator_au->elevator_state = elevator_au->elevate_state_h;
 	}else{
 		elevator_au->elevator_state = elevator_au->stop_state_h;

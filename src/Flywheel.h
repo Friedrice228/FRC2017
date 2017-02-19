@@ -32,6 +32,8 @@ public:
 	static void SpinWrapper(Flywheel *fw, int ref, bool *active);
 	double GetSpeed();
 	double FlywheelValue();
+	void SetGoal(double joyVal);
+	int GetGoal();
 };
 
 #endif

@@ -27,6 +27,15 @@ Conveyor *conveyor_;
 Vision *vision_;
 Climber *climber_;
 
+Timer *shootTimer = new Timer();
+
+const double period = .5;
+const double duty_cycle = 1.0;
+const double sleep_cycle = 0.0;
+const double reverse_cycle = 0.0;
+
+bool elevate_go = false;
+
 TeleopStateMachine::TeleopStateMachine(Flywheel *flywheelP, Conveyor *conveyorP,
 		GearRail *gearRailP, Elevator *elevatorP,
 		DriveController *driveControllerP, Vision *visionP, Climber *climberP) {
@@ -47,7 +56,8 @@ TeleopStateMachine::TeleopStateMachine(Flywheel *flywheelP, Conveyor *conveyorP,
 
 }
 
-void TeleopStateMachine::StateMachine(bool is_gear, bool is_close_gear, bool is_fire, bool is_climb,
+void TeleopStateMachine::StateMachine(bool is_gear, bool is_close_gear,
+bool is_fire, bool is_climb,
 bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 
 	if (fly_wheel->IsAtSpeed()) {
@@ -66,7 +76,6 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 
 		elevator_->elevator_state = elevator_->reverse_state_h;
 
-
 	} else if (!is_popcorn && state != fire_state) {
 
 		elevator_->elevator_state = elevator_->stop_state_h;
@@ -81,7 +90,6 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 
 		gear_rail->gear_rail_state = gear_rail->close_state_h;
 	}
-
 
 	//START SWITCH
 	switch (state) {
@@ -128,8 +136,6 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 
 		fly_wheel->flywheel_state = fly_wheel->spin_state_h;
 
-		elevator_->elevator_state = elevator_->stop_state_h;
-
 		if (is_stop_shoot) {
 
 			state = wait_for_button_state;
@@ -137,6 +143,10 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 		}
 
 		if (fly_wheel->IsAtSpeed() && is_second_fire) {
+
+			shootTimer->Reset();
+
+			shootTimer->Start();
 
 			state = fire_state;
 		}
@@ -151,9 +161,25 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 
 			elevator_->elevator_state = elevator_->reverse_state_h;
 
-		} else {
+		} else if ((shootTimer->Get() < (duty_cycle * period))) { //will run 40% of the time
 
 			elevator_->elevator_state = elevator_->elevate_state_h;
+
+		}else if ((shootTimer->Get() < ((reverse_cycle * period)) + (duty_cycle * period))){
+
+			elevator_->elevator_state = elevator_->reverse_state_h;
+
+		}else if ((shootTimer->Get() < ((reverse_cycle * period)) + (duty_cycle * period) + (sleep_cycle * period))){
+
+			elevator_->elevator_state = elevator_->stop_state_h;
+
+		}else if ((shootTimer->Get() >= ((reverse_cycle * period)) + (duty_cycle * period) + (sleep_cycle * period)) && (shootTimer->Get() < (period))) { //stop during other time
+
+			elevator_->elevator_state = elevator_->stop_state_h;
+
+		}else {//if ((shootTimer->Get() >= (period))) { // automatically resets the timer
+
+			shootTimer->Reset();
 
 		}
 
@@ -163,7 +189,13 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 
 			elevator_->elevator_state = elevator_->stop_state_h;
 
-		}else if (!is_second_fire){
+			shootTimer->Stop();
+
+		} else if (!is_second_fire) {
+
+			elevator_->elevator_state = elevator_->stop_state_h;
+
+			shootTimer->Stop();
 
 			state = init_shooting_state;
 
@@ -183,7 +215,8 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 
 		break;
 
-	case climbing_state: //hold to climb, release to stop
+	case climbing_state:
+		//hold to climb, release to stop
 
 		SmartDashboard::PutString("State", "Climbing");
 
@@ -217,12 +250,12 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 		break;
 
 	}
-	//END SWITCH
+//END SWITCH
 
 }
 
 //sets the state back to the init state
-void TeleopStateMachine::Initialize(){
+void TeleopStateMachine::Initialize() {
 
 	state = init_state;
 

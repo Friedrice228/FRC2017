@@ -41,19 +41,17 @@ public:
 	const int JOY_THROTTLE = 0;
 	const int JOY_WHEEL = 2;
 
-	const int CAN_LIGHT = 31;
 	const int GEAR_LIGHT_BUTTON = 8;
 	const int BALL_LIGHT_BUTTON = 9;
 	const int GEAR_AND_BALL_LIGHT_BUTTON = 10;
-
 	const int CLIMB_BUTTON = 12;
 	const int GEAR_BUTTON = 7;
 	const int GEAR_CLOSE_BUTTON = 8;
 	const int FIRE_BUTTON = 4;
-	const int RETURN_BUTTON = 3;
 	const int POPCORN_BUTTON = 2;
 	const int FIRE_BUTTON_2 = 1;
-	const int STOP_SHOOT_BUTTON = 5;
+	const int STOP_SHOOT_BUTTON = 3;
+	const int RETURN_BUTTON = 6; //NOT USED
 
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
@@ -108,13 +106,13 @@ public:
 		teleop_state_machine = new TeleopStateMachine(fly_wheel, conveyor_,
 				gear_rail, elevator_, drive_controller, vision_, climber_);
 
-		autonChooser.AddDefault(gearPlacementUsualAuton,
+		autonChooser.AddObject(gearPlacementUsualAuton,
 				gearPlacementUsualAuton);
 		autonChooser.AddObject(gearPlacementRight, gearPlacementRight);
 		autonChooser.AddObject(gearPlacementLeft, gearPlacementLeft);
 		autonChooser.AddObject(shootAuton, shootAuton);
 		autonChooser.AddObject(shootAndLoadAuton, shootAndLoadAuton);
-		autonChooser.AddObject(driveForward, driveForward);
+		autonChooser.AddDefault(driveForward, driveForward);
 
 		frc::SmartDashboard::PutData("Auto Modes", &autonChooser);
 

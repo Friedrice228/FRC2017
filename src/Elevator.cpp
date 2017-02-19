@@ -11,8 +11,8 @@ const int stop_state = 0;
 const int elevate_state = 1;
 const int reverse_state = 2;
 const int CAN_TALON_ELEVATOR = 21;
-const double ELEVATE_SPEED = 0.6;
-const double REVERSE_SPEED = 1.0;
+const double ELEVATE_SPEED = .9;
+const double REVERSE_SPEED = .75;
 
 Elevator::Elevator() {
 
@@ -57,8 +57,6 @@ void Elevator::ElevatorStateMachine() {
 	case reverse_state:
 
 		Reverse(REVERSE_SPEED);
-
-		std::cout << "GOOO" << std::endl;
 
 		break;
 
