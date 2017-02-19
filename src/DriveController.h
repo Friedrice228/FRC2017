@@ -31,7 +31,7 @@ public:
 	DriveController(Vision *vis);
 	void HDrive(Joystick *JoyThrottle, Joystick *JoyWheel);
 	void StopAll();
-	void StartTeleopThreads(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading);
+	void StartTeleopThreads(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading, bool *is_vision);
 	void StartAutonThreads();
 	void EndThreads();
 	void Drive(double ref_kick, double ref_right, double ref_left, double ref_yaw, double k_p_right, double k_p_left, double k_p_kick,
@@ -47,9 +47,11 @@ public:
 	void ResetIndex();
 	void SetRef(double refs[][12]);
 	double GetRef();
+	void SetInitHeading();
+	void SetAngle();
 
 	static void DrivePIDWrapper(DriveController *driveController);
-	static void HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading, DriveController *driveController);
+	static void HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading, bool *is_vision, DriveController *driveController);
 
 	void DisableTeleopThreads();
 	void DisableAutonThreads();

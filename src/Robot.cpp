@@ -75,7 +75,7 @@ public:
 	const int Split = 1;
 	int driveMode = HDrive; //0 = HDRIVE 1 = split
 
-	bool is_heading;
+	bool is_heading;bool is_vision;
 
 	double total = 0;
 
@@ -97,7 +97,8 @@ public:
 
 		drive_controller = new DriveController(vision_);
 
-		autonomous_ = new Autonomous(drive_controller, elevator_, conveyor_, gear_rail, fly_wheel);
+		autonomous_ = new Autonomous(drive_controller, elevator_, conveyor_,
+				gear_rail, fly_wheel);
 
 		climber_ = new Climber();
 
@@ -121,6 +122,7 @@ public:
 
 		frc::SmartDashboard::PutData("Alliance", &allianceChooser);
 
+		is_heading = false;
 		is_heading = false;
 
 		compressor = new Compressor(31);
@@ -186,7 +188,8 @@ public:
 
 		fly_wheel->StartThread(); //starts the speed controller thread
 
-		drive_controller->StartTeleopThreads(joyThrottle, joyWheel, &is_heading); //starts the drive code thread
+		drive_controller->StartTeleopThreads(joyThrottle, joyWheel, &is_heading,
+				&is_vision); //starts the drive code thread
 		drive_controller->KickerDown();
 
 		teleop_state_machine->Initialize(); //sets the state back to init
@@ -198,7 +201,7 @@ public:
 	void TeleopPeriodic() {
 
 		bool gear_button = joyOp->GetRawButton(GEAR_BUTTON);
-		bool gear_close_button = joyOp->GetRawButton(GEAR_CLOSE_BUTTON);//M#
+		bool gear_close_button = joyOp->GetRawButton(GEAR_CLOSE_BUTTON); //M#
 		bool stop_shoot_button = joyOp->GetRawButton(STOP_SHOOT_BUTTON);
 		bool fire_button = joyOp->GetRawButton(FIRE_BUTTON);
 		bool climb_button = joyOp->GetRawButton(CLIMB_BUTTON);
@@ -210,8 +213,8 @@ public:
 		bool popcorn_button = joyOp->GetRawButton(POPCORN_BUTTON);
 		bool second_fire_button = joyOp->GetRawButton(FIRE_BUTTON_2);
 
-		teleop_state_machine->StateMachine(gear_button, gear_close_button, fire_button,
-				climb_button, return_button, popcorn_button,
+		teleop_state_machine->StateMachine(gear_button, gear_close_button,
+				fire_button, climb_button, return_button, popcorn_button,
 				second_fire_button, stop_shoot_button);
 
 		//light_->LEDStateMachine(gear_light_button, ball_light_button,
@@ -225,8 +228,10 @@ public:
 		//START DRIVE CODE
 		const int HDrive = 0;
 		const int Heading = 1;
+		const int Vision = 2;
 
 		bool headingDrive = joyWheel->GetRawButton(5);
+		bool visionTrack = joyWheel->GetRawButton(6);
 
 		switch (driveMode) {
 
@@ -240,9 +245,22 @@ public:
 
 				drive_controller->KickerDown(); //Kicker to stay down the whole time
 
-				drive_controller->ahrs->ZeroYaw();
+				drive_controller->SetInitHeading();
 
 				driveMode = Heading;
+
+			} else if (visionTrack) {
+
+				drive_controller->StopAll();
+
+				drive_controller->KickerDown(); //Kicker to stay down the whole time
+
+				drive_controller->SetInitHeading();
+
+				drive_controller->SetAngle();
+
+				driveMode = Vision;
+
 			}
 
 			break;
@@ -252,6 +270,22 @@ public:
 			is_heading = true;
 
 			if (!headingDrive) {
+
+				drive_controller->StopAll();
+
+				drive_controller->KickerDown();
+
+				driveMode = HDrive;
+
+			}
+
+			break;
+
+		case Vision:
+
+			is_vision = true;
+
+			if (!visionTrack) {
 
 				drive_controller->StopAll();
 

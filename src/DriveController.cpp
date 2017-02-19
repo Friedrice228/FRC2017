@@ -76,7 +76,7 @@ const double K_D_KICKER_DIS = 0.0;
 const double MAX_FPS = ((MAX_Y_RPM * 4.0 * PI) / 12.0) / 60.0; //conversion to fps
 const double Kv = 1 / MAX_FPS; //scale from -1 to 1
 
-const double MAX_KICK_FPS = (MAX_X_RPM * 4.0 * PI /12.0) /60.0;
+const double MAX_KICK_FPS = (MAX_X_RPM * 4.0 * PI / 12.0) / 60.0;
 const int Kv_KICK = 1 / MAX_KICK_FPS;
 
 double P_RIGHT_DIS = 0;
@@ -129,6 +129,9 @@ double full_refs[NUM_POINTS][NUM_INDEX];
 
 double acceptable_yaw_error = .22;
 
+double init_heading = 0;
+double visionAngle = 0;
+
 Timer *timerTeleop = new Timer();
 Timer *timerAuton = new Timer();
 
@@ -178,11 +181,13 @@ void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) { //find
 		DYN_MAX_Y_RPM = MAX_Y_RPM; //deals with special case tht x = 0 (ratio cant divide by zero)
 	}
 
-	target_l = -1.0 * (JoyThrottle->GetY() < 0 ? -1 : 1) * (JoyThrottle->GetY() * JoyThrottle->GetY()) * DYN_MAX_Y_RPM;//if joy value is less than 0 set to -1, otherwise to 1
+	target_l = -1.0 * (JoyThrottle->GetY() < 0 ? -1 : 1)
+			* (JoyThrottle->GetY() * JoyThrottle->GetY()) * DYN_MAX_Y_RPM; //if joy value is less than 0 set to -1, otherwise to 1
 
 	target_r = target_l;
 
-	target_kick = (JoyThrottle->GetX() < 0 ? -1 : 1) * (JoyThrottle->GetX() * JoyThrottle->GetX()) * MAX_X_RPM; //if joy value is less than 0 set to -1, otherwise to 1
+	target_kick = (JoyThrottle->GetX() < 0 ? -1 : 1)
+			* (JoyThrottle->GetX() * JoyThrottle->GetX()) * MAX_X_RPM; //if joy value is less than 0 set to -1, otherwise to 1
 
 	target_yaw_rate = (JoyWheel->GetX()) * MAX_YAW_RATE; //Left will be positive
 
@@ -289,9 +294,9 @@ void DriveController::DrivePID() { //finds targets for Auton
  */
 void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 
-	double target_heading = 1.0 * joyWheel->GetX() * (90.0 * PI / 180.0); //scaling, conversion to degrees,left should be positive
+	double target_heading = init_heading + (1.0 * joyWheel->GetX() * (90.0 * PI / 180.0)); //scaling, conversion to degrees,left should be positive
 
-	double current_heading = 1.0 * ahrs->GetYaw() * ( PI / 180.0);//radians to degrees, left should be positive
+	double current_heading = 1.0 * ahrs->GetYaw() * ( PI / 180.0); //radians to degrees, left should be positive
 
 	double error_heading = target_heading - current_heading;
 
@@ -310,7 +315,7 @@ void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 
 void DriveController::VisionP() { //auto-aiming
 
-	double angle = vision_dc->findAzimuth();
+	double angle = visionAngle;
 
 	double normalized_angle = 0;
 
@@ -322,7 +327,7 @@ void DriveController::VisionP() { //auto-aiming
 
 	double current_heading = ahrs->GetYaw() * ( PI / 180.0);
 
-	double error_heading = normalized_angle;
+	double error_heading = (init_heading + normalized_angle) - current_heading;
 
 	double total_heading = K_P_YAW_HEADING_POS * error_heading;
 
@@ -339,13 +344,15 @@ void DriveController::VisionP() { //auto-aiming
 
 void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 		double ref_yaw, double k_p_right, double k_p_left, double k_p_kick,
-		double k_p_yaw, double k_d_yaw, double target_vel_left, double target_vel_right, double target_vel_kick) { //setting talons
+		double k_p_yaw, double k_d_yaw, double target_vel_left,
+		double target_vel_right, double target_vel_kick) { //setting talons
 
-	double yaw_rate_current = 1.0 * (double) ahrs->GetRawGyroZ() * (double) ((PI) / 180); //Left should be positive
+	double yaw_rate_current = 1.0 * (double) ahrs->GetRawGyroZ()
+			* (double) ((PI) / 180); //Left should be positive
 
 	double target_yaw_rate = ref_yaw;
 
-	ref_left = ref_left + (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
+	ref_left = ref_left + (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE)); //left should be positive
 	ref_right = ref_right - (target_yaw_rate * (MAX_Y_RPM / MAX_YAW_RATE));
 
 	double yaw_error = target_yaw_rate - yaw_rate_current;
@@ -399,7 +406,8 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 
 	double total_right = P_RIGHT_VEL + feed_forward_r + (Kv * target_vel_right);
 	double total_left = P_LEFT_VEL + feed_forward_l + (Kv * target_vel_left);
-	double total_kick = P_KICK_VEL + feed_forward_k + (Kv_KICK * target_vel_kick);
+	double total_kick = P_KICK_VEL + feed_forward_k
+			+ (Kv_KICK * target_vel_kick);
 
 	canTalonFrontLeft->Set(-total_left); //back cantalons follow front, don't need to set them individually
 	canTalonFrontRight->Set(total_right);
@@ -448,8 +456,20 @@ void DriveController::ZeroI() {
 
 }
 
+void DriveController::SetInitHeading(){
+
+	init_heading = ahrs->GetYaw();
+
+}
+
+void DriveController::SetAngle(){
+
+	visionAngle = vision_dc->findAzimuth();
+
+}
+
 void DriveController::HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel,
-bool *is_heading, DriveController *driveController) {
+bool *is_heading, bool *is_vision, DriveController *driveController) {
 
 	timerTeleop->Start();
 
@@ -478,6 +498,19 @@ bool *is_heading, DriveController *driveController) {
 
 			}
 		}
+		while (frc::RobotState::IsEnabled() && !frc::RobotState::IsAutonomous()
+				&& (bool) *is_vision) {
+
+			std::this_thread::sleep_for(
+					std::chrono::milliseconds(DC_SLEEP_TIME));
+
+			if (timerTeleop->HasPeriodPassed(timetokeep)) {
+
+				driveController->VisionP();
+
+			}
+
+		}
 	}
 }
 
@@ -497,11 +530,11 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 			}
 
-			if (drive_ref[11] == 1){ //vision on TODO: check if 1 needs to be 1.0
+			if (drive_ref[11] == 1) { //vision on TODO: check if 1 needs to be 1.0
 
 				driveController->VisionP();
 
-			}else{ //vision off
+			} else { //vision off
 
 				driveController->DrivePID();
 
@@ -521,12 +554,12 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 void DriveController::StartTeleopThreads(Joystick *JoyThrottle,
 		Joystick *JoyWheel,
-		bool *is_heading) {
+		bool *is_heading, bool *is_vision) {
 
 	DriveController *dc = this;
 
 	HDriveThread = std::thread(&DriveController::HDriveWrapper, JoyThrottle,
-			JoyWheel, is_heading, dc);
+			JoyWheel, is_heading, is_vision, dc);
 	HDriveThread.detach();
 
 }
@@ -546,7 +579,7 @@ void DriveController::DisableTeleopThreads() {
 
 }
 
-void DriveController::DisableAutonThreads(){
+void DriveController::DisableAutonThreads() {
 
 	DrivePIDThread.~thread();
 
