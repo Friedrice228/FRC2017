@@ -294,9 +294,9 @@ void DriveController::DrivePID() { //finds targets for Auton
  */
 void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 
-	double target_heading = init_heading + (1.0 * joyWheel->GetX() * (90.0 * PI / 180.0)); //scaling, conversion to degrees,left should be positive
+	double target_heading = init_heading + (1.0 * joyWheel->GetX() * (90.0 * PI / 180.0)); //scaling, conversion to radians,left should be positive
 
-	double current_heading = 1.0 * ahrs->GetYaw() * ( PI / 180.0); //radians to degrees, left should be positive
+	double current_heading = 1.0 * ahrs->GetYaw() * ( PI / 180.0); //degrees to radians, left should be positive
 
 	double error_heading = target_heading - current_heading;
 
@@ -325,7 +325,9 @@ void DriveController::VisionP() { //auto-aiming
 		normalized_angle = angle;
 	}
 
-	double current_heading = ahrs->GetYaw() * ( PI / 180.0);
+	normalized_angle = normalized_angle * (PI/180.0);
+
+	double current_heading = ahrs->GetYaw() * (PI / 180.0);
 
 	double error_heading = (init_heading + normalized_angle) - current_heading;
 
@@ -458,7 +460,7 @@ void DriveController::ZeroI() {
 
 void DriveController::SetInitHeading(){
 
-	init_heading = ahrs->GetYaw();
+	init_heading = ahrs->GetYaw() * (PI/180);
 
 }
 
@@ -475,7 +477,7 @@ bool *is_heading, bool *is_vision, DriveController *driveController) {
 
 	while (true) {
 		while (frc::RobotState::IsEnabled() && !frc::RobotState::IsAutonomous()
-				&& !(bool) *is_heading) {
+				&& !(bool) *is_heading && !(bool) *is_vision) {
 
 			std::this_thread::sleep_for(
 					std::chrono::milliseconds(DC_SLEEP_TIME));
@@ -487,7 +489,7 @@ bool *is_heading, bool *is_vision, DriveController *driveController) {
 			}
 		}
 		while (frc::RobotState::IsEnabled() && !frc::RobotState::IsAutonomous()
-				&& (bool) *is_heading) {
+				&& (bool) *is_heading && !(bool) *is_vision) {
 
 			std::this_thread::sleep_for(
 					std::chrono::milliseconds(DC_SLEEP_TIME));
@@ -499,7 +501,7 @@ bool *is_heading, bool *is_vision, DriveController *driveController) {
 			}
 		}
 		while (frc::RobotState::IsEnabled() && !frc::RobotState::IsAutonomous()
-				&& (bool) *is_vision) {
+				&& (bool) *is_vision && !(bool) *is_heading) {
 
 			std::this_thread::sleep_for(
 					std::chrono::milliseconds(DC_SLEEP_TIME));
@@ -526,7 +528,7 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 			for (int i = 0; i < sizeof(drive_ref); i++) {
 
-				drive_ref[i] = full_refs[index1][i]; //for SetRefs()
+				drive_ref[i] = full_refs[index1][i]; //from SetRefs()
 
 			}
 

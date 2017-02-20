@@ -24,13 +24,13 @@ GearRail::GearRail() {
 
 void GearRail::Open() {
 
-	gearRailPiston->Set(DoubleSolenoid::Value::kReverse);
+	gearRailPiston->Set(DoubleSolenoid::Value::kForward);
 
 }
 
 void GearRail::Close() {
 
-	gearRailPiston->Set(DoubleSolenoid::Value::kForward);
+	gearRailPiston->Set(DoubleSolenoid::Value::kReverse);
 
 }
 

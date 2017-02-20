@@ -7,8 +7,6 @@
 #include <TeleopStateMachine.h>
 #include <iostream>
 
-const std::string maxs_korean_name = "Ku Sung";
-
 const int init_state = 0;
 const int wait_for_button_state = 1;
 const int open_gear_rails_state = 2;
