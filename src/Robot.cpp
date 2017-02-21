@@ -164,7 +164,7 @@ public:
 
 		} else if (autoSelected == driveForward) {
 
-			autonomous_->FillProfile("/home/lvuser/MP.csv");
+			autonomous_->FillProfile("/home/lvuser/motion_profile.csv");
 
 		} else if (autoSelected == shootAuton) {
 
@@ -325,6 +325,8 @@ public:
 
 		case FC:
 
+			SmartDashboard::PutString("Drive: ", "Field Centric");
+
 			is_fc = true;
 
 			if (regButton){
@@ -336,6 +338,8 @@ public:
 			break;
 
 		case Reg:
+
+			SmartDashboard::PutString("Drive: ", "Regular");
 
 			is_fc = false;
 
@@ -354,6 +358,8 @@ public:
 	void DisabledInit() {
 
 		drive_controller->DisableTeleopThreads();
+
+		drive_controller->DisableAutonThreads();
 
 		fly_wheel->DisableThreads();
 

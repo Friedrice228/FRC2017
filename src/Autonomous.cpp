@@ -74,13 +74,13 @@ void Autonomous::FillProfile(std::string profileName) { //fill array
 		if (!file.good()) {
 			std::cout << "FAIL" << std::endl;
 		}
-		int i = 0;
-		while (i < NUM_INDEX) {
+		int c = 0;
+		while (c < NUM_INDEX) {
 			std::string val;
 			std::getline(iss, val, ',');
 			std::stringstream convertor(val);
-			convertor >> refs[r][i];
-			i++;
+			convertor >> refs[r][c];
+			c++;
 		}
 		r++;
 	}

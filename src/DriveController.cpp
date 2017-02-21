@@ -22,8 +22,8 @@ const double MAX_YAW_RATE = (17.8 / 508) * MAX_Y_RPM; //max angular velocity div
 
 const int DC_SLEEP_TIME = 10;
 
-const int CAN_TALON_FRONT_LEFT = 18;
-const int CAN_TALON_BACK_LEFT = 22;
+const int CAN_TALON_FRONT_LEFT = 22;
+const int CAN_TALON_BACK_LEFT = 18;
 const int CAN_TALON_BACK_RIGHT = 36;
 const int CAN_TALON_FRONT_RIGHT = 30;
 const int CAN_TALON_KICKER = 20;
@@ -37,7 +37,7 @@ double kick_last_error = 0;
 
 const double K_P_YAW_T = 45.0;
 
-const double K_P_YAW_AU = 55.0;
+const double K_P_YAW_AU = 40.0;
 const double K_D_YAW_AU = 0.0;
 
 const double K_P_YAW_H_VEL = 37.0;
@@ -177,8 +177,6 @@ bool *is_fc) { //finds targets for teleop
 
 	if ((bool) *is_fc) {
 
-		std::cout << "True" << std::endl;
-
 		if (current_yaw < -PI) {
 			current_yaw += (2.0 * PI);
 		} else if (current_yaw > PI) {
@@ -207,8 +205,6 @@ bool *is_fc) { //finds targets for teleop
 	}else{
 
 		forward = 1.0 * forward; //not needed
-
-		std::cout << "NOPE" <<std::endl;
 
 	}
 
@@ -320,6 +316,9 @@ void DriveController::DrivePID() { //finds targets for Auton
 	} else if (target_rpm_right < -MAX_Y_RPM) {
 		target_rpm_right = -MAX_Y_RPM;
 	}
+
+	std::cout << "Ref: " << refLeft;
+	std::cout << " L: " << l_dis << std::endl;
 
 	Drive(target_rpm_kick, target_rpm_right, target_rpm_left, targetYawRate,
 			K_P_RIGHT_VEL, K_P_LEFT_VEL, K_P_KICK_VEL, K_P_YAW_AU, K_D_YAW_AU,
@@ -505,7 +504,7 @@ void DriveController::ZeroI() {
 
 void DriveController::SetInitHeading() {
 
-	init_heading = ahrs->GetYaw() * (PI / 180);
+	init_heading = -1.0 * ahrs->GetYaw() * (PI / 180);
 
 }
 
