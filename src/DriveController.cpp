@@ -35,7 +35,7 @@ double kick_last_error = 0;
 
 //CHANGEABLESTART
 
-const double K_P_YAW_T = 40.0;
+const double K_P_YAW_T = 45.0;
 
 const double K_P_YAW_AU = 55.0;
 const double K_D_YAW_AU = 0.0;
@@ -44,15 +44,15 @@ const double K_P_YAW_H_VEL = 37.0;
 
 const double K_P_YAW_HEADING_POS = 8.668;
 
-const double K_P_LEFT_VEL = 0.0014;
+const double K_P_LEFT_VEL = 0.0030;
 const double K_F_LEFT_VEL = 1.0 / 508.0;
 double P_LEFT_VEL = 0;
 
-const double K_P_RIGHT_VEL = 0.0014;
+const double K_P_RIGHT_VEL = 0.0030;
 const double K_F_RIGHT_VEL = 1.0 / 508.0;
 double P_RIGHT_VEL = 0;
 
-const double K_P_KICK_VEL = .003;
+const double K_P_KICK_VEL = .006;
 const double K_F_KICK_VEL = 1.0 / 330.0;
 double P_KICK_VEL = 0;
 
@@ -61,7 +61,7 @@ const double CONVERSION_MULTIPLICATION = 600;
 
 const double K_P_RIGHT_DIS = 0.45;
 const double K_P_LEFT_DIS = 0.45;
-const double K_P_KICKER_DIS = 0.0;
+const double K_P_KICKER_DIS = 0.35; //TODO: check this value
 
 const double K_I_RIGHT_DIS = 0.000;
 const double K_I_LEFT_DIS = 0.000;
@@ -167,27 +167,69 @@ DriveController::DriveController(Vision *vis) {
 
 }
 
-void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel) { //finds targets for teleop
+void DriveController::HDrive(Joystick *JoyThrottle, Joystick *JoyWheel,
+bool *is_fc) { //finds targets for teleop
+
+	double forward = -1.0 * JoyThrottle->GetY();
+	double strafe = JoyThrottle->GetX();
+	double current_yaw = fmod((-1.0 * ahrs->GetYaw() * (PI / 180.0)),
+			(2.0 * PI));
+
+	if ((bool) *is_fc) {
+
+		std::cout << "True" << std::endl;
+
+		if (current_yaw < -PI) {
+			current_yaw += (2.0 * PI);
+		} else if (current_yaw > PI) {
+			current_yaw -= (2.0 * PI);
+		}
+
+		double psi = std::atan2(forward, strafe);
+
+		double magnitude = sqrt((forward * forward) + (strafe * strafe));
+
+		forward = magnitude * (std::sin(psi - current_yaw));
+		strafe = magnitude * (std::cos(psi - current_yaw));
+
+		if ((psi - current_yaw) > (-1.0 * PI) && (psi - current_yaw) <= (0)) {
+			if (forward > 0) {
+				forward = -1.0 * forward;
+			}
+		}
+		if (((psi - current_yaw) > (PI / 2) && (psi - current_yaw) <= (PI))
+				|| ((psi - current_yaw) > (-1.0 * PI)
+						&& (psi - current_yaw) <= (-1.0 * PI / 2))) {
+			if (strafe > 0) {
+				strafe = -1.0 * strafe;
+			}
+		}
+	}else{
+
+		forward = 1.0 * forward; //not needed
+
+		std::cout << "NOPE" <<std::endl;
+
+	}
 
 	double target_l, target_r, target_kick, target_yaw_rate;
 
 	double axis_ratio = 0.0; //ratio between x and y axes
 
-	if (JoyThrottle->GetX() != 0) { //if x is 0, it is undefined (division)
-		axis_ratio = std::abs(JoyThrottle->GetY() / JoyThrottle->GetX()); //dont use regular abs, that returns an int
+	if (strafe != 0) { //if x is 0, it is undefined (division)
+		axis_ratio = std::abs(forward / strafe); //dont use regular abs, that returns an int
 		DYN_MAX_Y_RPM = MAX_X_RPM * (double) axis_ratio;
 		DYN_MAX_Y_RPM = DYN_MAX_Y_RPM > MAX_Y_RPM ? MAX_Y_RPM : DYN_MAX_Y_RPM; //if DYN_max_Y is bigger than MAX_Y then set to MAX_Y, otherwise keep DYN_MAX_Y
 	} else {
 		DYN_MAX_Y_RPM = MAX_Y_RPM; //deals with special case tht x = 0 (ratio cant divide by zero)
 	}
 
-	target_l = -1.0 * (JoyThrottle->GetY() < 0 ? -1 : 1)
-			* (JoyThrottle->GetY() * JoyThrottle->GetY()) * DYN_MAX_Y_RPM; //if joy value is less than 0 set to -1, otherwise to 1
+	target_l = 1.0 * (forward < 0 ? -1 : 1) * (forward * forward)
+			* DYN_MAX_Y_RPM; //if joy value is less than 0 set to -1, otherwise to 1
 
 	target_r = target_l;
 
-	target_kick = 1.0 * (JoyThrottle->GetX() < 0 ? -1 : 1)
-			* (JoyThrottle->GetX() * JoyThrottle->GetX()) * MAX_X_RPM; //if joy value is less than 0 set to -1, otherwise to 1
+	target_kick = 1.0 * (strafe < 0 ? -1 : 1) * (strafe * strafe) * MAX_X_RPM; //if joy value is less than 0 set to -1, otherwise to 1
 
 	target_yaw_rate = -1.0 * (JoyWheel->GetX()) * MAX_YAW_RATE; //Left will be positive
 
@@ -294,7 +336,8 @@ void DriveController::DrivePID() { //finds targets for Auton
  */
 void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 
-	double target_heading = init_heading + (-1.0 * joyWheel->GetX() * (90.0 * PI / 180.0)); //scaling, conversion to radians,left should be positive
+	double target_heading = init_heading
+			+ (-1.0 * joyWheel->GetX() * (90.0 * PI / 180.0)); //scaling, conversion to radians,left should be positive
 
 	double current_heading = -1.0 * ahrs->GetYaw() * ( PI / 180.0); //degrees to radians, left should be positive
 
@@ -325,7 +368,7 @@ void DriveController::VisionP() { //auto-aiming
 		normalized_angle = -angle;
 	}
 
-	normalized_angle = normalized_angle * (PI/180.0);
+	normalized_angle = normalized_angle * (PI / 180.0);
 
 	double current_heading = ahrs->GetYaw() * (PI / 180.0);
 
@@ -415,6 +458,10 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 	canTalonFrontRight->Set(total_right);
 	canTalonKicker->Set(-total_kick);
 
+//	std::cout << "Left: " << l_current;
+//	std::cout << " Right: " << r_current;
+//	std::cout << " Kicker: " << kick_current << std::endl;
+
 	yaw_last_error = yaw_error;
 
 }
@@ -456,20 +503,21 @@ void DriveController::ZeroI() {
 
 }
 
-void DriveController::SetInitHeading(){
+void DriveController::SetInitHeading() {
 
-	init_heading = ahrs->GetYaw() * (PI/180);
+	init_heading = ahrs->GetYaw() * (PI / 180);
 
 }
 
-void DriveController::SetAngle(){
+void DriveController::SetAngle() {
 
 	visionAngle = vision_dc->findAzimuth();
 
 }
 
 void DriveController::HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel,
-bool *is_heading, bool *is_vision, DriveController *driveController) {
+bool *is_heading, bool *is_vision, bool *is_fc,
+		DriveController *driveController) {
 
 	timerTeleop->Start();
 
@@ -482,7 +530,7 @@ bool *is_heading, bool *is_vision, DriveController *driveController) {
 
 			if (timerTeleop->HasPeriodPassed(timetokeep)) {
 
-				driveController->HDrive(JoyThrottle, JoyWheel);
+				driveController->HDrive(JoyThrottle, JoyWheel, is_fc);
 
 			}
 		}
@@ -554,12 +602,12 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 void DriveController::StartTeleopThreads(Joystick *JoyThrottle,
 		Joystick *JoyWheel,
-		bool *is_heading, bool *is_vision) {
+		bool *is_heading, bool *is_vision, bool *is_fc) {
 
 	DriveController *dc = this;
 
 	HDriveThread = std::thread(&DriveController::HDriveWrapper, JoyThrottle,
-			JoyWheel, is_heading, is_vision, dc);
+			JoyWheel, is_heading, is_vision, is_fc, dc);
 	HDriveThread.detach();
 
 }

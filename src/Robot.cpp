@@ -53,6 +53,11 @@ public:
 	const int STOP_SHOOT_BUTTON = 3;
 	const int RETURN_BUTTON = 6; //NOT USED
 
+	const int HEADING_CONTROL_BUTTON = 5;
+	const int VISION_TRACK_BUTTON = 6;
+	const int FC_BUTTON = 1;
+	const int REG_BUTTON = 2;
+
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
 
@@ -73,9 +78,16 @@ public:
 
 	const int HDrive = 0;
 	const int Split = 1;
+	const int Vis = 2;
 	int driveMode = HDrive; //0 = HDRIVE 1 = split
 
-	bool is_heading;bool is_vision;
+	const int FC = 0;
+	const int Reg = 1;
+	int Type = FC;
+
+	bool is_heading;
+	bool is_vision;
+	bool is_fc;
 
 	double total = 0;
 
@@ -124,6 +136,7 @@ public:
 
 		is_heading = false;
 		is_heading = false;
+		is_fc = true;
 
 		compressor = new Compressor(31);
 		compressor->SetClosedLoopControl(true);
@@ -189,12 +202,14 @@ public:
 		fly_wheel->StartThread(); //starts the speed controller thread
 
 		drive_controller->StartTeleopThreads(joyThrottle, joyWheel, &is_heading,
-				&is_vision); //starts the drive code thread
+				&is_vision, &is_fc); //starts the drive code thread
 		drive_controller->KickerDown();
 
 		teleop_state_machine->Initialize(); //sets the state back to init
 
 		drive_controller->DisableAutonThreads();
+
+		drive_controller->ahrs->ZeroYaw();
 
 	}
 
@@ -228,10 +243,10 @@ public:
 		//START DRIVE CODE
 		const int HDrive = 0;
 		const int Heading = 1;
-		const int Vision = 2;
+		const int Vis = 2;
 
-		bool headingDrive = joyWheel->GetRawButton(5);
-		bool visionTrack = joyWheel->GetRawButton(6);
+		bool headingDrive = joyWheel->GetRawButton(HEADING_CONTROL_BUTTON);
+		bool visionTrack = joyWheel->GetRawButton(VISION_TRACK_BUTTON);
 
 		switch (driveMode) {
 
@@ -259,7 +274,7 @@ public:
 
 				drive_controller->SetAngle();
 
-				driveMode = Vision;
+				driveMode = Vis;
 
 			}
 
@@ -281,7 +296,7 @@ public:
 
 			break;
 
-		case Vision:
+		case Vis:
 
 			is_vision = true;
 
@@ -299,6 +314,40 @@ public:
 
 		}
 		//END DRIVECODE
+
+		const int FC = 0; //Field Centric
+		const int Reg = 1;
+
+		bool fcButton = joyThrottle->GetRawButton(FC_BUTTON);
+		bool regButton = joyThrottle->GetRawButton(REG_BUTTON);
+
+		switch (Type){
+
+		case FC:
+
+			is_fc = true;
+
+			if (regButton){
+
+				Type = Reg;
+
+			}
+
+			break;
+
+		case Reg:
+
+			is_fc = false;
+
+			if (fcButton){
+
+				Type = FC;
+
+			}
+
+			break;
+
+		}
 
 	} // TeleopPeriodic
 
