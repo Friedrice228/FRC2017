@@ -20,7 +20,7 @@ double DYN_MAX_Y_RPM = 480;
 const double MAX_X_RPM = 300; // Max RPM ACTUAL: 330
 const double MAX_YAW_RATE = (17.8 / 508) * MAX_Y_RPM; //max angular velocity divided by the max rpm multiplied by set max rpm
 
-const int DC_SLEEP_TIME = 10;
+const int DC_SLEEP_TIME = 1;
 
 const int CAN_TALON_FRONT_LEFT = 22;
 const int CAN_TALON_BACK_LEFT = 18;
@@ -35,24 +35,24 @@ double kick_last_error = 0;
 
 //CHANGEABLESTART
 
-const double K_P_YAW_T = 45.0;
+const double K_P_YAW_T = 35.0;
 
-const double K_P_YAW_AU = 40.0;
+const double K_P_YAW_AU = 35.0;
 const double K_D_YAW_AU = 0.0;
 
 const double K_P_YAW_H_VEL = 37.0;
 
 const double K_P_YAW_HEADING_POS = 8.668;
 
-const double K_P_LEFT_VEL = 0.0030;
+const double K_P_LEFT_VEL = 0.0040;
 const double K_F_LEFT_VEL = 1.0 / 508.0;
 double P_LEFT_VEL = 0;
 
-const double K_P_RIGHT_VEL = 0.0030;
+const double K_P_RIGHT_VEL = 0.0040;
 const double K_F_RIGHT_VEL = 1.0 / 508.0;
 double P_RIGHT_VEL = 0;
 
-const double K_P_KICK_VEL = .006;
+const double K_P_KICK_VEL = .004;
 const double K_F_KICK_VEL = 1.0 / 330.0;
 double P_KICK_VEL = 0;
 
@@ -61,7 +61,7 @@ const double CONVERSION_MULTIPLICATION = 600;
 
 const double K_P_RIGHT_DIS = 0.45;
 const double K_P_LEFT_DIS = 0.45;
-const double K_P_KICKER_DIS = 0.35; //TODO: check this value
+const double K_P_KICKER_DIS = 0.25; //TODO: check this value
 
 const double K_I_RIGHT_DIS = 0.000;
 const double K_I_LEFT_DIS = 0.000;
@@ -76,7 +76,7 @@ const double K_D_KICKER_DIS = 0.0;
 const double MAX_FPS = ((MAX_Y_RPM * 4.0 * PI) / 12.0) / 60.0; //conversion to fps
 const double Kv = 1 / MAX_FPS; //scale from -1 to 1
 
-const double MAX_KICK_FPS = (MAX_X_RPM * 4.0 * PI / 12.0) / 60.0;
+const double MAX_KICK_FPS = ((MAX_X_RPM * 4.0 * PI) / 12.0) / 60.0;
 const int Kv_KICK = 1 / MAX_KICK_FPS;
 
 double P_RIGHT_DIS = 0;
@@ -118,11 +118,13 @@ double r_error_dis_t = 0;
 
 double kick_error_vel = 0;
 
-double timetokeep = 0.01;
+double timetokeep = 0.001;
 
 const int NUM_POINTS = 1500;
 const int NUM_INDEX = 12;
 
+double last_drive_ref[NUM_INDEX] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0 };
 double drive_ref[NUM_INDEX] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0 };
 double full_refs[NUM_POINTS][NUM_INDEX];
@@ -202,7 +204,7 @@ bool *is_fc) { //finds targets for teleop
 				strafe = -1.0 * strafe;
 			}
 		}
-	}else{
+	} else {
 
 		forward = 1.0 * forward; //not needed
 
@@ -262,6 +264,8 @@ void DriveController::DrivePID() { //finds targets for Auton
 	double tarVelLeft = drive_ref[4];
 	double tarVelRight = drive_ref[5];
 	double tarVelKick = drive_ref[6];
+
+	std::cout << tarVelKick << std::endl;
 
 	//conversion to feet
 	double r_dis = -(((double) canTalonFrontRight->GetEncPosition()
@@ -362,7 +366,7 @@ void DriveController::VisionP() { //auto-aiming
 	double normalized_angle = 0;
 
 	if (angle > 180) {
-		normalized_angle = 360 - angle; //will be negative to go left TODO:CHange that
+		normalized_angle = 360 - angle; //negative = right
 	} else {
 		normalized_angle = -angle;
 	}
@@ -450,8 +454,7 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 
 	double total_right = P_RIGHT_VEL + feed_forward_r + (Kv * target_vel_right);
 	double total_left = P_LEFT_VEL + feed_forward_l + (Kv * target_vel_left);
-	double total_kick = P_KICK_VEL + feed_forward_k
-			+ (Kv_KICK * target_vel_kick);
+	double total_kick = P_KICK_VEL + feed_forward_k + (Kv_KICK * target_vel_kick);
 
 	canTalonFrontLeft->Set(-total_left); //back cantalons follow front, don't need to set them individually
 	canTalonFrontRight->Set(total_right);
@@ -514,6 +517,17 @@ void DriveController::SetAngle() {
 
 }
 
+bool DriveController::CheckIfNull() { //true if all values are 0
+
+	for (int i = 0; i < NUM_INDEX; i++) { //checks if the entire array is zero (excluding the first point, make sure you dont check that one)
+		if (drive_ref[i] != 0) {
+			return false;
+		}
+	}
+	return true;
+
+}
+
 void DriveController::HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel,
 bool *is_heading, bool *is_vision, bool *is_fc,
 		DriveController *driveController) {
@@ -571,13 +585,23 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 		if (timerAuton->HasPeriodPassed(timetokeep)) {
 
-			for (int i = 0; i < sizeof(drive_ref); i++) {
+			for (int i = 0; i < sizeof(drive_ref); i++) { //looks through each row and then fills drive_ref with the column here, refills each interval with next set of refs
 
 				drive_ref[i] = full_refs[index1][i]; //from SetRefs()
 
+//				if (driveController->CheckIfNull() && index1 != 0) { //check if the point is null showing that the profile is done, the first point will look null (refer to CheckIfNull)
+//
+//					std::cout << "here" << std::endl;
+//
+//					for (int k = 0; k < NUM_INDEX; k++) {
+//						drive_ref[k] = last_drive_ref[k];
+//					}
+//
+//				}
+
 			}
 
-			if (drive_ref[11] == 1) { //vision on TODO: check if 1 needs to be 1.0
+			if (drive_ref[11] == 1) { //vision on
 
 				driveController->VisionP();
 
@@ -588,10 +612,13 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 			}
 
 			index1++;
-
+			for (int j = 0; j < NUM_INDEX; j++) {
+				last_drive_ref[j] = drive_ref[j];
+			}
 		}
 
-		if (index1 >= NUM_POINTS) { //stop at the end of the motion profile
+		if (index1 >= NUM_POINTS) { //stop at the end of the motion profile, this number is set after the creation of the array
+									//so not all of the array will be accessed, only the part before the non-zero points
 			driveController->StopAll();
 			break;
 		}

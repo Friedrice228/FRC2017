@@ -10,9 +10,9 @@ const int stop_state = 0;
 const int spin_state = 1;
 
 const int GOAL_RPM_ORIGINAL = 3250;
-int GOAL_RPM = 3250;
+int GOAL_RPM = 3400;
 
-const int MAX_FLYWHEEL_ERROR = 400;
+const int MAX_FLYWHEEL_ERROR = 400; //reaches 3700
 const int CAN_TALON_FLYWHEEL_FRONT_RIGHT = 33;
 const int CAN_TALON_FLYWHEEL_BACK_RIGHT = 24;
 const int CAN_TALON_FLYWHEEL_FRONT_LEFT = 29;
@@ -42,9 +42,9 @@ Flywheel::Flywheel() {
 	canTalonFlywheelFrontRight->SetP(RIGHT_P_GAIN);
 	canTalonFlywheelFrontRight->ConfigNominalOutputVoltage(+2.0f, -0.0f);
 	canTalonFlywheelFrontRight->ConfigPeakOutputVoltage(+12.0f, +2.0f);
-	canTalonFlywheelFrontRight->SetSensorDirection(true);
+	canTalonFlywheelFrontRight->SetSensorDirection(true); //dont change
 	canTalonFlywheelFrontRight->SelectProfileSlot(0);
-	canTalonFlywheelFrontRight->SetSensorDirection(true);
+	canTalonFlywheelFrontRight->SetSensorDirection(true); //false if Koba
 
 	//Set all other motors as slaves that will follow the output of the master
 	canTalonFlywheelFrontLeft = new CANTalon(CAN_TALON_FLYWHEEL_FRONT_LEFT);

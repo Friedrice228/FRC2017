@@ -50,6 +50,7 @@ public:
 	double GetRef();
 	void SetInitHeading();
 	void SetAngle();
+	bool CheckIfNull();
 
 	static void DrivePIDWrapper(DriveController *driveController);
 	static void HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading, bool *is_vision, bool *is_fc, DriveController *driveController);

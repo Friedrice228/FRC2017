@@ -63,7 +63,13 @@ void Autonomous::RunAuton() { // runs continuously through all autonomous modes
 }
 
 
-void Autonomous::FillProfile(std::string profileName) { //fill array
+void Autonomous::FillProfile(std::string profileName) { //fill array and run auton
+
+	for (int r = 0; r < NUM_POINTS; r++){ //sets the entire array to 0 so that all the points that arent filled are zeros, easy to check for
+		for (int c = 0; c < NUM_INDEX; c++){
+			refs[r][c] = 0;
+		}
+	}
 
 	int r = 0;
 	std::fstream file(profileName, std::ios::in);
@@ -81,6 +87,9 @@ void Autonomous::FillProfile(std::string profileName) { //fill array
 			std::stringstream convertor(val);
 			convertor >> refs[r][c];
 			c++;
+			if (file.eof()){
+			//	drive_controller->SetProfileLength(r); //sets array length to length of csv file
+			}
 		}
 		r++;
 	}

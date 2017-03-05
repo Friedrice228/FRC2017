@@ -11,7 +11,7 @@ const int stop_state = 0;
 const int elevate_state = 1;
 const int reverse_state = 2;
 const int CAN_TALON_ELEVATOR = 21;
-const double ELEVATE_SPEED = .9;
+const double ELEVATE_SPEED = .4;
 const double REVERSE_SPEED = .75;
 
 Elevator::Elevator() {

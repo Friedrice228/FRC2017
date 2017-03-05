@@ -37,6 +37,11 @@ public:
 	LEDLightStrip *light_;
 	Compressor *compressor;
 
+
+
+
+
+// defining values for button actions
 	const int JOY_OP = 1;
 	const int JOY_THROTTLE = 0;
 	const int JOY_WHEEL = 2;
@@ -53,20 +58,27 @@ public:
 	const int STOP_SHOOT_BUTTON = 3;
 	const int RETURN_BUTTON = 6; //NOT USED
 
+
+
 	const int HEADING_CONTROL_BUTTON = 5;
 	const int VISION_TRACK_BUTTON = 6;
 	const int FC_BUTTON = 1;
 	const int REG_BUTTON = 2;
 
+
+
+
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
 
+	const std::string gearPlacementAndShoot = "Gear Placement and Shoot"; //move forward place a gear and then shoot the ten pre loaded balls
 	const std::string gearPlacementUsualAuton = "Gear Placement Usual"; //gear to middle position
 	const std::string gearPlacementRight = "Gear Placement Right"; //gear to side position
 	const std::string gearPlacementLeft = "Gear Placement Left";
 	const std::string shootAuton = "Shoot"; //shoot with pre-loaded balls
 	const std::string shootAndLoadAuton = "Shoot and Load"; //get balls from hopper, then shoot
 	const std::string driveForward = "Drive Forward";
+
 
 	const std::string redAlliance = "Red Alliance";
 	const std::string blueAlliance = "Blue Alliance";
@@ -80,14 +92,11 @@ public:
 	const int Split = 1;
 	const int Vis = 2;
 	int driveMode = HDrive; //0 = HDRIVE 1 = split
-
 	const int FC = 0;
 	const int Reg = 1;
 	int Type = FC;
 
-	bool is_heading;
-	bool is_vision;
-	bool is_fc;
+	bool is_heading;bool is_vision;bool is_fc;
 
 	double total = 0;
 
@@ -119,8 +128,8 @@ public:
 		teleop_state_machine = new TeleopStateMachine(fly_wheel, conveyor_,
 				gear_rail, elevator_, drive_controller, vision_, climber_);
 
-		autonChooser.AddObject(gearPlacementUsualAuton,
-				gearPlacementUsualAuton);
+		autonChooser.AddObject(gearPlacementUsualAuton, gearPlacementUsualAuton);
+		autonChooser.AddObject(gearPlacementAndShoot, gearPlacementAndShoot);
 		autonChooser.AddObject(gearPlacementRight, gearPlacementRight);
 		autonChooser.AddObject(gearPlacementLeft, gearPlacementLeft);
 		autonChooser.AddObject(shootAuton, shootAuton);
@@ -158,13 +167,15 @@ public:
 
 		if (autoSelected == gearPlacementUsualAuton) { //choose auton sequence
 
+			autonomous_->FillProfile("/home/lvuser/Gear_Profile.csv");
+
 		} else if (autoSelected == gearPlacementRight) {
 
 		} else if (autoSelected == gearPlacementLeft) {
 
 		} else if (autoSelected == driveForward) {
 
-			autonomous_->FillProfile("/home/lvuser/motion_profile.csv");
+			autonomous_->FillProfile("/home/lvuser/Drive_Forward_Profile.csv");
 
 		} else if (autoSelected == shootAuton) {
 
@@ -175,6 +186,14 @@ public:
 			}
 
 		} else if (autoSelected == shootAndLoadAuton) {
+
+			if (allianceSelected == redAlliance) {
+
+			} else {
+
+			}
+
+		} else if (autoSelected == gearPlacementAndShoot) {
 
 			if (allianceSelected == redAlliance) {
 
@@ -216,7 +235,7 @@ public:
 	void TeleopPeriodic() {
 
 		bool gear_button = joyOp->GetRawButton(GEAR_BUTTON);
-		bool gear_close_button = joyOp->GetRawButton(GEAR_CLOSE_BUTTON); //M#
+		bool gear_close_button = joyOp->GetRawButton(GEAR_CLOSE_BUTTON);
 		bool stop_shoot_button = joyOp->GetRawButton(STOP_SHOOT_BUTTON);
 		bool fire_button = joyOp->GetRawButton(FIRE_BUTTON);
 		bool climb_button = joyOp->GetRawButton(CLIMB_BUTTON);
@@ -321,7 +340,7 @@ public:
 		bool fcButton = joyThrottle->GetRawButton(FC_BUTTON);
 		bool regButton = joyThrottle->GetRawButton(REG_BUTTON);
 
-		switch (Type){
+		switch (Type) {
 
 		case FC:
 
@@ -329,7 +348,7 @@ public:
 
 			is_fc = true;
 
-			if (regButton){
+			if (regButton) {
 
 				Type = Reg;
 
@@ -343,13 +362,19 @@ public:
 
 			is_fc = false;
 
-			if (fcButton){
+			if (fcButton) {
 
 				Type = FC;
 
 			}
 
 			break;
+
+		}
+
+		if (joyThrottle->GetRawButton(3)) {
+
+			drive_controller->ahrs->ZeroYaw();
 
 		}
 
