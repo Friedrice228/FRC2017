@@ -234,6 +234,11 @@ public:
 
 	void TeleopPeriodic() {
 
+//		std::cout<<"R1: "<< drive_controller->canTalonBackRight->GetOutputCurrent();//<<std::endl;
+//		std::cout<<" R2: "<< drive_controller->canTalonFrontRight->GetOutputCurrent();//<<std::endl;
+//		std::cout<<" L1: "<< drive_controller->canTalonBackLeft->GetOutputCurrent();//<<std::endl;
+//		std::cout<< " L2: "<< drive_controller->canTalonFrontLeft->GetOutputCurrent()<<std::endl;
+
 		bool gear_button = joyOp->GetRawButton(GEAR_BUTTON);
 		bool gear_close_button = joyOp->GetRawButton(GEAR_CLOSE_BUTTON);
 		bool stop_shoot_button = joyOp->GetRawButton(STOP_SHOOT_BUTTON);

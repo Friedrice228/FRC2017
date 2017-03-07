@@ -252,7 +252,7 @@ bool *is_fc) { //finds targets for teleop
 
 }
 
-/*
+/**
  * Param: Feet forward, + = forward
  */
 void DriveController::DrivePID() { //finds targets for Auton
@@ -265,7 +265,9 @@ void DriveController::DrivePID() { //finds targets for Auton
 	double tarVelRight = drive_ref[5];
 	double tarVelKick = drive_ref[6];
 
-	std::cout << tarVelKick << std::endl;
+	if (std::abs(tarVelKick) < .05){
+		tarVelKick = 0.0;
+	}
 
 	//conversion to feet
 	double r_dis = -(((double) canTalonFrontRight->GetEncPosition()
@@ -459,6 +461,8 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 	canTalonFrontLeft->Set(-total_left); //back cantalons follow front, don't need to set them individually
 	canTalonFrontRight->Set(total_right);
 	canTalonKicker->Set(-total_kick);
+
+	std::cout<<kick_error_vel<<std::endl;
 
 //	std::cout << "Left: " << l_current;
 //	std::cout << " Right: " << r_current;
