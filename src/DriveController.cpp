@@ -17,7 +17,7 @@ const double TICKS_PER_ROT = 4096;
 
 const double MAX_Y_RPM = 480;
 double DYN_MAX_Y_RPM = 480;
-const double MAX_X_RPM = 300; // Max RPM ACTUAL: 330
+const double MAX_X_RPM = 230; // Max RPM ACTUAL: 330
 const double MAX_YAW_RATE = (17.8 / 508) * MAX_Y_RPM; //max angular velocity divided by the max rpm multiplied by set max rpm
 
 const int DC_SLEEP_TIME = 1;
@@ -37,7 +37,7 @@ double kick_last_error = 0;
 
 const double K_P_YAW_T = 35.0;
 
-const double K_P_YAW_AU = 35.0;
+const double K_P_YAW_AU = 38.0;
 const double K_D_YAW_AU = 0.0;
 
 const double K_P_YAW_H_VEL = 37.0;
@@ -53,7 +53,7 @@ const double K_F_RIGHT_VEL = 1.0 / 508.0;
 double P_RIGHT_VEL = 0;
 
 const double K_P_KICK_VEL = .004;
-const double K_F_KICK_VEL = 1.0 / 330.0;
+const double K_F_KICK_VEL = 1.0 / 230.0; //1/330
 double P_KICK_VEL = 0;
 
 const double CONVERSION_DIVISION = 4096;
@@ -275,7 +275,7 @@ void DriveController::DrivePID() { //finds targets for Auton
 	double l_dis = (((double) canTalonFrontLeft->GetEncPosition()
 			/ TICKS_PER_ROT) * (WHEEL_DIAMETER * PI) / 12);
 
-	double k_dis = -(((double) canTalonKicker->GetEncPosition() / TICKS_PER_ROT)
+	double k_dis = (((double) canTalonKicker->GetEncPosition() / TICKS_PER_ROT)
 			* (WHEEL_DIAMETER * PI) / 12);
 
 	l_error_dis_au = refLeft - l_dis;
@@ -322,9 +322,6 @@ void DriveController::DrivePID() { //finds targets for Auton
 	} else if (target_rpm_right < -MAX_Y_RPM) {
 		target_rpm_right = -MAX_Y_RPM;
 	}
-
-	std::cout << "Ref: " << refLeft;
-	std::cout << " L: " << l_dis << std::endl;
 
 	Drive(target_rpm_kick, target_rpm_right, target_rpm_left, targetYawRate,
 			K_P_RIGHT_VEL, K_P_LEFT_VEL, K_P_KICK_VEL, K_P_YAW_AU, K_D_YAW_AU,
@@ -462,7 +459,10 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 	canTalonFrontRight->Set(total_right);
 	canTalonKicker->Set(-total_kick);
 
-	std::cout<<kick_error_vel<<std::endl;
+	std::cout<< "ERROR: "<<kick_error_vel;
+	std::cout<< " Actual: "<<kick_current;
+	std::cout<< " TARGET: "<<ref_kick<<std::endl;
+
 
 //	std::cout << "Left: " << l_current;
 //	std::cout << " Right: " << r_current;
@@ -592,16 +592,6 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 			for (int i = 0; i < sizeof(drive_ref); i++) { //looks through each row and then fills drive_ref with the column here, refills each interval with next set of refs
 
 				drive_ref[i] = full_refs[index1][i]; //from SetRefs()
-
-//				if (driveController->CheckIfNull() && index1 != 0) { //check if the point is null showing that the profile is done, the first point will look null (refer to CheckIfNull)
-//
-//					std::cout << "here" << std::endl;
-//
-//					for (int k = 0; k < NUM_INDEX; k++) {
-//						drive_ref[k] = last_drive_ref[k];
-//					}
-//
-//				}
 
 			}
 

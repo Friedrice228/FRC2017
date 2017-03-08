@@ -78,6 +78,7 @@ public:
 	const std::string shootAuton = "Shoot"; //shoot with pre-loaded balls
 	const std::string shootAndLoadAuton = "Shoot and Load"; //get balls from hopper, then shoot
 	const std::string driveForward = "Drive Forward";
+	const std::string fancyDriveForward = "Fancy Drive Forward";
 
 
 	const std::string redAlliance = "Red Alliance";
@@ -134,6 +135,7 @@ public:
 		autonChooser.AddObject(gearPlacementLeft, gearPlacementLeft);
 		autonChooser.AddObject(shootAuton, shootAuton);
 		autonChooser.AddObject(shootAndLoadAuton, shootAndLoadAuton);
+		//autonChooser.AddObject(fancyDriveForward, fancyDriveForward);
 		autonChooser.AddDefault(driveForward, driveForward);
 
 		frc::SmartDashboard::PutData("Auto Modes", &autonChooser);
@@ -177,7 +179,8 @@ public:
 
 			autonomous_->FillProfile("/home/lvuser/Drive_Forward_Profile.csv");
 
-		} else if (autoSelected == shootAuton) {
+		}else if (autoSelected == shootAuton) {
+
 
 			if (allianceSelected == redAlliance) {
 
@@ -239,6 +242,8 @@ public:
 //		std::cout<<" L1: "<< drive_controller->canTalonBackLeft->GetOutputCurrent();//<<std::endl;
 //		std::cout<< " L2: "<< drive_controller->canTalonFrontLeft->GetOutputCurrent()<<std::endl;
 
+		SmartDashboard::PutNumber("Azimuth", vision_->findAzimuth());
+
 		bool gear_button = joyOp->GetRawButton(GEAR_BUTTON);
 		bool gear_close_button = joyOp->GetRawButton(GEAR_CLOSE_BUTTON);
 		bool stop_shoot_button = joyOp->GetRawButton(STOP_SHOOT_BUTTON);
@@ -277,6 +282,8 @@ public:
 		case HDrive:
 
 			is_heading = false;
+
+			is_vision = false;
 
 			if (headingDrive) {
 
@@ -323,6 +330,8 @@ public:
 		case Vis:
 
 			is_vision = true;
+
+			std::cout << "VIS" << std::endl;
 
 			if (!visionTrack) {
 
