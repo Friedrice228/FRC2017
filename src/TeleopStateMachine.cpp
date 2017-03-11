@@ -229,13 +229,13 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 
 		if (climber_->CheckCurrent() >= climber_->MAX_CURRENT) {
 
-			state = finish_climbing;
+			state = wait_for_button_state;
 
 		}
 
 		break;
 
-	case finish_climbing:
+	case finish_climbing: //not used
 
 		SmartDashboard::PutString("State", "Finish Climbing");
 

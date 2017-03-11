@@ -95,7 +95,7 @@ public:
 	int driveMode = HDrive; //0 = HDRIVE 1 = split
 	const int FC = 0;
 	const int Reg = 1;
-	int Type = FC;
+	int Type = Reg;
 
 	bool is_heading;bool is_vision;bool is_fc;
 
@@ -168,6 +168,7 @@ public:
 		drive_controller->ZeroI();
 		drive_controller->ahrs->ZeroYaw();
 		drive_controller->ResetIndex();
+		drive_controller->ResetVisionState();
 
 		if (autoSelected == gearPlacementUsualAuton) { //choose auton sequence
 
@@ -255,7 +256,7 @@ public:
 
 	void TeleopPeriodic() {
 
-		std::cout<<pdp->GetTotalCurrent()<<std::endl;
+	//	std::cout<<pdp->GetTotalCurrent()<<std::endl;
 
 //		std::cout<<"R1: "<< drive_controller->canTalonBackRight->GetOutputCurrent();//<<std::endl;
 //		std::cout<<" R2: "<< drive_controller->canTalonFrontRight->GetOutputCurrent();//<<std::endl;

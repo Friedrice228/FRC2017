@@ -42,7 +42,7 @@ const double K_D_YAW_AU = 0.0;
 
 const double K_P_YAW_H_VEL = 30.0;
 
-const double K_P_YAW_HEADING_POS = 8.668;
+const double K_P_YAW_HEADING_POS = 9.668;
 
 const double K_P_LEFT_VEL = 0.0040;
 const double K_F_LEFT_VEL = 1.0 / 508.0;
@@ -131,11 +131,23 @@ double full_refs[NUM_POINTS][NUM_INDEX];
 
 double acceptable_yaw_error = .22;
 
+double error_heading = 0;
+double total_heading = 0;
+
 double init_heading = 0;
 double visionAngle = 0;
+double visionDistance = 0;
 
 double store_right_enc = 0;
 double store_left_enc = 0;
+
+const int stamp_state = 0;
+const int vision_aim_state = 1;
+const int drive_state = 2;
+
+bool vision_done_before = false;
+
+int vision_track_state = stamp_state;
 
 Timer *timerTeleop = new Timer();
 Timer *timerAuton = new Timer();
@@ -346,9 +358,9 @@ void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 
 	double current_heading = -1.0 * ahrs->GetYaw() * ( PI / 180.0); //degrees to radians, left should be positive
 
-	double error_heading = target_heading - current_heading;
+	double error_heading_h = target_heading - current_heading;
 
-	double total_heading = -1.0 * K_P_YAW_HEADING_POS * error_heading;
+	double total_heading_h = K_P_YAW_HEADING_POS * error_heading_h;
 
 	if (total_heading > MAX_YAW_RATE) {
 		total_heading = MAX_YAW_RATE;
@@ -356,7 +368,7 @@ void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 		total_heading = -MAX_YAW_RATE;
 	}
 
-	Drive(0.0, 0.0, 0.0, total_heading, K_P_RIGHT_VEL, K_P_LEFT_VEL,
+	Drive(0.0, 0.0, 0.0, total_heading_h, K_P_RIGHT_VEL, K_P_LEFT_VEL,
 			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0, 0.0, 0.0);
 
 }
@@ -368,18 +380,18 @@ void DriveController::VisionP() { //auto-aiming
 	double normalized_angle = 0;
 
 	if (angle > 180) {
-		normalized_angle = 360 - angle;
+		normalized_angle = angle - 360;
 	} else {
-		normalized_angle = -angle; //negative = right
+		normalized_angle = angle; //negative = right
 	}
 
 	normalized_angle = normalized_angle * (double)(PI / 180.0);
 
 	double current_heading = -1.0 * ahrs->GetYaw() * (double)(PI / 180.0);
 
-	double error_heading = (init_heading + normalized_angle) - current_heading;
+	error_heading = (init_heading + normalized_angle) - current_heading;
 
-	double total_heading = K_P_YAW_HEADING_POS * error_heading;
+	total_heading = K_P_YAW_HEADING_POS * error_heading;
 
 	if (total_heading > MAX_YAW_RATE) {
 		total_heading = MAX_YAW_RATE;
@@ -387,9 +399,44 @@ void DriveController::VisionP() { //auto-aiming
 		total_heading = -MAX_YAW_RATE;
 	}
 
+	std::cout << total_heading<< std::endl;
+
 	//call to velocit controller
 	Drive(0.0, 0.0, 0.0, total_heading, K_P_RIGHT_VEL, K_P_LEFT_VEL,
 			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0, 0.0, 0.0);
+
+}
+
+void DriveController::AutoVisionTrack(){ //aims the robot and then drive forward in auton, do not use n teleop
+
+	switch(vision_track_state){
+
+	case stamp_state:
+		SetInitHeading();
+		SetAngle();
+		vision_track_state = vision_aim_state;
+		break;
+
+	case vision_aim_state:
+		VisionP();
+		if (!vision_done_before && (total_heading < 0.4)){ //TODO: MAGYK NUBER
+			vision_track_state = stamp_state;
+			vision_done_before = true;
+		}
+		if (vision_done_before && (std::abs(error_heading) < 2.5)){ //TODO: MAGYK NUBER
+			ZeroEncs();
+			SetDist();
+			vision_track_state = drive_state;
+		}
+		break;
+
+	case drive_state:
+		drive_ref[0] = visionDistance;
+		drive_ref[1] = visionDistance;
+		DrivePID();
+		break;
+
+	}
 
 }
 
@@ -476,6 +523,14 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 
 }
 
+void DriveController::ResetVisionState(){
+
+	vision_track_state = stamp_state;
+
+	vision_done_before = false;
+
+}
+
 void DriveController::StopAll() {
 
 	canTalonFrontLeft->Set(0);
@@ -522,6 +577,12 @@ void DriveController::SetInitHeading() {
 void DriveController::SetAngle() {
 
 	visionAngle = vision_dc->findAzimuth();
+
+}
+
+void DriveController::SetDist(){
+
+	visionDistance = vision_dc->findDistance() / 12.0; //convert to feet
 
 }
 
@@ -619,11 +680,7 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 			if (drive_ref[11] == 1) { //vision on
 
-				driveController->StoreEncValues();
-
-				driveController->VisionP();
-
-				driveController->SetEncValues(); //makes sure the encoder values dont change during vision trcking, would mess up our profiles
+				driveController->AutoVisionTrack();
 
 			} else { //vision off
 

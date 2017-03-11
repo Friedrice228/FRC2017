@@ -40,6 +40,7 @@ public:
 	void DrivePID();
 	void HeadingPID(Joystick *joyWheel);
 	void VisionP();
+	void AutoVisionTrack();
 	void KickerUp();
 	void KickerDown();
 	void ZeroEncs();
@@ -50,9 +51,11 @@ public:
 	double GetRef();
 	void SetInitHeading();
 	void SetAngle();
+	void SetDist();
 	bool CheckIfNull();
 	void StoreEncValues();
 	void SetEncValues();
+	void ResetVisionState();
 
 	static void DrivePIDWrapper(DriveController *driveController);
 	static void HDriveWrapper(Joystick *JoyThrottle, Joystick *JoyWheel, bool *is_heading, bool *is_vision, bool *is_fc, DriveController *driveController);
