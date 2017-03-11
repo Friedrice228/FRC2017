@@ -36,8 +36,7 @@ public:
 	Climber *climber_;
 	LEDLightStrip *light_;
 	Compressor *compressor;
-
-
+	PowerDistributionPanel *pdp;
 
 
 
@@ -73,6 +72,7 @@ public:
 
 	const std::string gearPlacementAndShoot = "Gear Placement and Shoot"; //move forward place a gear and then shoot the ten pre loaded balls
 	const std::string gearPlacementUsualAuton = "Gear Placement Usual"; //gear to middle position
+	const std::string gearPlacementUsualVision = "Gear Placement Usual Vision";
 	const std::string gearPlacementRight = "Gear Placement Right"; //gear to side position
 	const std::string gearPlacementLeft = "Gear Placement Left";
 	const std::string shootAuton = "Shoot"; //shoot with pre-loaded balls
@@ -103,6 +103,8 @@ public:
 
 	void RobotInit() {
 
+		pdp = new PowerDistributionPanel(1);
+
 		joyOp = new Joystick(JOY_OP);
 		joyThrottle = new Joystick(JOY_THROTTLE);
 		joyWheel = new Joystick(JOY_WHEEL);
@@ -129,14 +131,14 @@ public:
 		teleop_state_machine = new TeleopStateMachine(fly_wheel, conveyor_,
 				gear_rail, elevator_, drive_controller, vision_, climber_);
 
-		autonChooser.AddObject(gearPlacementUsualAuton, gearPlacementUsualAuton);
+		autonChooser.AddDefault(gearPlacementUsualAuton, gearPlacementUsualAuton);
 		autonChooser.AddObject(gearPlacementAndShoot, gearPlacementAndShoot);
 		autonChooser.AddObject(gearPlacementRight, gearPlacementRight);
 		autonChooser.AddObject(gearPlacementLeft, gearPlacementLeft);
 		autonChooser.AddObject(shootAuton, shootAuton);
 		autonChooser.AddObject(shootAndLoadAuton, shootAndLoadAuton);
-		//autonChooser.AddObject(fancyDriveForward, fancyDriveForward);
-		autonChooser.AddDefault(driveForward, driveForward);
+		autonChooser.AddObject(gearPlacementUsualVision, gearPlacementUsualVision);
+		autonChooser.AddObject(driveForward, driveForward);
 
 		frc::SmartDashboard::PutData("Auto Modes", &autonChooser);
 
@@ -169,9 +171,25 @@ public:
 
 		if (autoSelected == gearPlacementUsualAuton) { //choose auton sequence
 
-			autonomous_->FillProfile("/home/lvuser/Gear_Profile.csv");
+			if (allianceSelected == redAlliance){
 
-		} else if (autoSelected == gearPlacementRight) {
+				autonomous_->FillProfile("/home/lvuser/Gear_Profile_Red.csv");
+
+			} else {
+
+				autonomous_->FillProfile("/home/lvuser/Gear_Profile_Blue.csv");
+
+			}
+
+		} else if(autoSelected == gearPlacementUsualVision){
+
+			if (allianceSelected == redAlliance){
+
+			} else{
+
+			}
+
+		}else if (autoSelected == gearPlacementRight) {
 
 		} else if (autoSelected == gearPlacementLeft) {
 
@@ -236,6 +254,8 @@ public:
 	}
 
 	void TeleopPeriodic() {
+
+		std::cout<<pdp->GetTotalCurrent()<<std::endl;
 
 //		std::cout<<"R1: "<< drive_controller->canTalonBackRight->GetOutputCurrent();//<<std::endl;
 //		std::cout<<" R2: "<< drive_controller->canTalonFrontRight->GetOutputCurrent();//<<std::endl;

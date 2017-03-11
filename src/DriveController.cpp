@@ -37,10 +37,10 @@ double kick_last_error = 0;
 
 const double K_P_YAW_T = 35.0;
 
-const double K_P_YAW_AU = 38.0;
+const double K_P_YAW_AU = 32.0;
 const double K_D_YAW_AU = 0.0;
 
-const double K_P_YAW_H_VEL = 37.0;
+const double K_P_YAW_H_VEL = 30.0;
 
 const double K_P_YAW_HEADING_POS = 8.668;
 
@@ -133,6 +133,9 @@ double acceptable_yaw_error = .22;
 
 double init_heading = 0;
 double visionAngle = 0;
+
+double store_right_enc = 0;
+double store_left_enc = 0;
 
 Timer *timerTeleop = new Timer();
 Timer *timerAuton = new Timer();
@@ -265,7 +268,7 @@ void DriveController::DrivePID() { //finds targets for Auton
 	double tarVelRight = drive_ref[5];
 	double tarVelKick = drive_ref[6];
 
-	if (std::abs(tarVelKick) < .05){
+	if (std::abs(tarVelKick) < .05) {
 		tarVelKick = 0.0;
 	}
 
@@ -345,7 +348,7 @@ void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 
 	double error_heading = target_heading - current_heading;
 
-	double total_heading = K_P_YAW_HEADING_POS * error_heading;
+	double total_heading = -1.0 * K_P_YAW_HEADING_POS * error_heading;
 
 	if (total_heading > MAX_YAW_RATE) {
 		total_heading = MAX_YAW_RATE;
@@ -365,14 +368,14 @@ void DriveController::VisionP() { //auto-aiming
 	double normalized_angle = 0;
 
 	if (angle > 180) {
-		normalized_angle = 360 - angle; //negative = right
+		normalized_angle = 360 - angle;
 	} else {
-		normalized_angle = -angle;
+		normalized_angle = -angle; //negative = right
 	}
 
-	normalized_angle = normalized_angle * (PI / 180.0);
+	normalized_angle = normalized_angle * (double)(PI / 180.0);
 
-	double current_heading = ahrs->GetYaw() * (PI / 180.0);
+	double current_heading = -1.0 * ahrs->GetYaw() * (double)(PI / 180.0);
 
 	double error_heading = (init_heading + normalized_angle) - current_heading;
 
@@ -384,6 +387,7 @@ void DriveController::VisionP() { //auto-aiming
 		total_heading = -MAX_YAW_RATE;
 	}
 
+	//call to velocit controller
 	Drive(0.0, 0.0, 0.0, total_heading, K_P_RIGHT_VEL, K_P_LEFT_VEL,
 			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0, 0.0, 0.0);
 
@@ -453,16 +457,16 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 
 	double total_right = P_RIGHT_VEL + feed_forward_r + (Kv * target_vel_right);
 	double total_left = P_LEFT_VEL + feed_forward_l + (Kv * target_vel_left);
-	double total_kick = P_KICK_VEL + feed_forward_k + (Kv_KICK * target_vel_kick);
+	double total_kick = P_KICK_VEL + feed_forward_k
+			+ (Kv_KICK * target_vel_kick);
 
 	canTalonFrontLeft->Set(-total_left); //back cantalons follow front, don't need to set them individually
 	canTalonFrontRight->Set(total_right);
 	canTalonKicker->Set(-total_kick);
 
-	std::cout<< "ERROR: "<<kick_error_vel;
-	std::cout<< " Actual: "<<kick_current;
-	std::cout<< " TARGET: "<<ref_kick<<std::endl;
-
+//	std::cout << "ERROR: " << kick_error_vel;
+//	std::cout << " Actual: " << kick_current;
+//	std::cout << " TARGET: " << ref_kick << std::endl;
 
 //	std::cout << "Left: " << l_current;
 //	std::cout << " Right: " << r_current;
@@ -511,7 +515,7 @@ void DriveController::ZeroI() {
 
 void DriveController::SetInitHeading() {
 
-	init_heading = -1.0 * ahrs->GetYaw() * (PI / 180);
+	init_heading = -1.0 * ahrs->GetYaw() * (double)(PI / 180);
 
 }
 
@@ -529,6 +533,24 @@ bool DriveController::CheckIfNull() { //true if all values are 0
 		}
 	}
 	return true;
+
+}
+
+void DriveController::StoreEncValues() {
+
+	store_right_enc = -canTalonFrontRight->GetEncPosition();
+	store_left_enc = canTalonFrontLeft->GetEncPosition();
+
+}
+
+void DriveController::SetEncValues() {
+
+	canTalonFrontRight->SetEncPosition(store_right_enc);
+	canTalonBackRight->SetEncPosition(store_right_enc);
+
+	canTalonFrontLeft->SetEncPosition(store_left_enc);
+	canTalonBackLeft->SetEncPosition(store_left_enc);
+
 
 }
 
@@ -597,7 +619,11 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 			if (drive_ref[11] == 1) { //vision on
 
+				driveController->StoreEncValues();
+
 				driveController->VisionP();
+
+				driveController->SetEncValues(); //makes sure the encoder values dont change during vision trcking, would mess up our profiles
 
 			} else { //vision off
 
