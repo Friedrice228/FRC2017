@@ -33,6 +33,10 @@ double r_last_error = 0;
 double yaw_last_error = 0;
 double kick_last_error = 0;
 
+double l_last_error_vel = 0;
+double r_last_error_vel = 0;
+double kick_last_error_vel = 0;
+
 //CHANGEABLESTART
 
 const double K_P_YAW_T = 35.0;
@@ -42,19 +46,28 @@ const double K_D_YAW_AU = 0.0;
 
 const double K_P_YAW_H_VEL = 30.0;
 
-const double K_P_YAW_HEADING_POS = 9.668;
+const double K_P_YAW_HEADING_POS = 9;
 
-const double K_P_LEFT_VEL = 0.0040;
+const double K_P_LEFT_VEL = 0.009;
+const double K_D_LEFT_VEL = 0.0;
 const double K_F_LEFT_VEL = 1.0 / 508.0;
 double P_LEFT_VEL = 0;
+double D_LEFT_VEL = 0;
+double d_left_vel = 0; //dynamic value
 
-const double K_P_RIGHT_VEL = 0.0040;
+const double K_P_RIGHT_VEL = 0.009;
+const double K_D_RIGHT_VEL = 0.0;
 const double K_F_RIGHT_VEL = 1.0 / 508.0;
 double P_RIGHT_VEL = 0;
+double D_RIGHT_VEL = 0;
+double d_right_vel = 0; //dynamic value
 
 const double K_P_KICK_VEL = .004;
+const double K_D_KICK_VEL = 0.0;
 const double K_F_KICK_VEL = 1.0 / 230.0; //1/330
 double P_KICK_VEL = 0;
+double D_KICK_VEL = 0;
+double d_kick_vel = 0; // dynamic value
 
 const double CONVERSION_DIVISION = 4096;
 const double CONVERSION_MULTIPLICATION = 600;
@@ -263,7 +276,7 @@ bool *is_fc) { //finds targets for teleop
 	}
 
 	Drive(target_kick, target_r, target_l, target_yaw_rate, K_P_RIGHT_VEL,
-			K_P_LEFT_VEL, K_P_KICK_VEL, K_P_YAW_T, 0.0, 0.0, 0.0, 0.0);
+			K_P_LEFT_VEL, K_P_KICK_VEL, K_P_YAW_T, 0.0, K_D_LEFT_VEL, K_D_RIGHT_VEL, K_D_KICK_VEL, 0.0, 0.0, 0.0);
 
 }
 
@@ -340,7 +353,7 @@ void DriveController::DrivePID() { //finds targets for Auton
 
 	Drive(target_rpm_kick, target_rpm_right, target_rpm_left, targetYawRate,
 			K_P_RIGHT_VEL, K_P_LEFT_VEL, K_P_KICK_VEL, K_P_YAW_AU, K_D_YAW_AU,
-			tarVelLeft, tarVelRight, tarVelKick);
+			K_D_LEFT_VEL, K_D_RIGHT_VEL, K_D_KICK_VEL, tarVelLeft, tarVelRight, tarVelKick);
 
 	l_last_error = l_error_dis_au;
 	r_last_error = r_error_dis_au;
@@ -369,7 +382,7 @@ void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 	}
 
 	Drive(0.0, 0.0, 0.0, total_heading_h, K_P_RIGHT_VEL, K_P_LEFT_VEL,
-			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0, 0.0, 0.0);
+			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
 }
 
@@ -380,9 +393,9 @@ void DriveController::VisionP() { //auto-aiming
 	double normalized_angle = 0;
 
 	if (angle > 180) {
-		normalized_angle = angle - 360;
+		normalized_angle = 360 - angle;
 	} else {
-		normalized_angle = angle; //negative = right
+		normalized_angle = -angle; //negative = right
 	}
 
 	normalized_angle = normalized_angle * (double)(PI / 180.0);
@@ -399,11 +412,9 @@ void DriveController::VisionP() { //auto-aiming
 		total_heading = -MAX_YAW_RATE;
 	}
 
-	std::cout << total_heading<< std::endl;
-
 	//call to velocit controller
 	Drive(0.0, 0.0, 0.0, total_heading, K_P_RIGHT_VEL, K_P_LEFT_VEL,
-			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0, 0.0, 0.0);
+			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0);
 
 }
 
@@ -433,6 +444,8 @@ void DriveController::AutoVisionTrack(){ //aims the robot and then drive forward
 	case drive_state:
 		drive_ref[0] = visionDistance;
 		drive_ref[1] = visionDistance;
+		drive_ref[2] = 0;
+		drive_ref[3] = 0;
 		DrivePID();
 		break;
 
@@ -442,7 +455,7 @@ void DriveController::AutoVisionTrack(){ //aims the robot and then drive forward
 
 void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 		double ref_yaw, double k_p_right, double k_p_left, double k_p_kick,
-		double k_p_yaw, double k_d_yaw, double target_vel_left,
+		double k_p_yaw, double k_d_yaw, double k_d_right, double k_d_left, double k_d_kick, double target_vel_left,
 		double target_vel_right, double target_vel_kick) { //setting talons
 
 	double yaw_rate_current = -1.0 * (double) ahrs->GetRawGyroZ()
@@ -498,9 +511,17 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 	r_error_vel_t = ref_right - r_current;
 	kick_error_vel = ref_kick - kick_current;
 
+	d_left_vel = (l_error_vel_t - l_last_error_vel);
+	d_right_vel = (r_error_vel_t - r_last_error_vel);
+	d_kick_vel = (kick_error_vel - kick_last_error_vel);
+
 	P_LEFT_VEL = k_p_left * l_error_vel_t;
 	P_RIGHT_VEL = k_p_right * r_error_vel_t;
 	P_KICK_VEL = k_p_kick * kick_error_vel;
+
+	D_LEFT_VEL = k_d_left * d_left_vel;
+	D_RIGHT_VEL = k_d_right * d_right_vel;
+	D_KICK_VEL = k_d_kick * d_kick_vel;
 
 	double total_right = P_RIGHT_VEL + feed_forward_r + (Kv * target_vel_right);
 	double total_left = P_LEFT_VEL + feed_forward_l + (Kv * target_vel_left);
@@ -511,15 +532,14 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 	canTalonFrontRight->Set(total_right);
 	canTalonKicker->Set(-total_kick);
 
-//	std::cout << "ERROR: " << kick_error_vel;
-//	std::cout << " Actual: " << kick_current;
-//	std::cout << " TARGET: " << ref_kick << std::endl;
-
-//	std::cout << "Left: " << l_current;
-//	std::cout << " Right: " << r_current;
-//	std::cout << " Kicker: " << kick_current << std::endl;
+	std::cout << "Left: " << l_current;
+	//std::cout << " Right: " << r_current;
+	std::cout << " Error: " << l_error_vel_t << std::endl;
 
 	yaw_last_error = yaw_error;
+	l_last_error_vel = l_error_vel_t;
+	r_last_error_vel = r_error_vel_t;
+	kick_last_error_vel = kick_error_vel;
 
 }
 
@@ -678,15 +698,15 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 
 			}
 
-			if (drive_ref[11] == 1) { //vision on
+		//	if (drive_ref[11] == 1) { //vision on
 
-				driveController->AutoVisionTrack();
+		//		driveController->AutoVisionTrack();
 
-			} else { //vision off
+			//} else { //vision off
 
 				driveController->DrivePID();
 
-			}
+			//}
 
 			index1++;
 			for (int j = 0; j < NUM_INDEX; j++) {

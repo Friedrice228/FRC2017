@@ -192,6 +192,8 @@ public:
 
 		}else if (autoSelected == gearPlacementRight) {
 
+			autonomous_->FillProfile("/home/lvuser/Gear_Right_Profile.csv");
+
 		} else if (autoSelected == gearPlacementLeft) {
 
 		} else if (autoSelected == driveForward) {
@@ -235,6 +237,8 @@ public:
 		gear_rail->GearRailStateMachine();
 
 		autonomous_->RunAuton();
+
+		std::cout << "angle: " << drive_controller->ahrs->GetYaw() << std::endl;
 
 	}
 

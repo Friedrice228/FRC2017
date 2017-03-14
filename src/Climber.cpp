@@ -10,7 +10,7 @@
 const int stop_state = 0;
 const int climbing_state = 1;
 const int CAN_TALON_CLIMBER = 55;
-const double CLIMBING_SPEED = .7;
+const double CLIMBING_SPEED = .9;
 
 Climber::Climber() { // not climbing back down - sean
 

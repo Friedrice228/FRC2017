@@ -26,6 +26,7 @@ Vision *vision_;
 Climber *climber_;
 
 Timer *shootTimer = new Timer();
+Timer *drawTimer = new Timer();
 
 const double period = .5;
 const double duty_cycle = 1.0;
@@ -33,6 +34,8 @@ const double sleep_cycle = 0.0;
 const double reverse_cycle = 0.0;
 
 bool elevate_go = false;
+
+double draw_wait_time = 1;
 
 TeleopStateMachine::TeleopStateMachine(Flywheel *flywheelP, Conveyor *conveyorP,
 		GearRail *gearRailP, Elevator *elevatorP,
@@ -84,7 +87,6 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 
 		gear_rail->gear_rail_state = gear_rail->open_state_h;
 
-		std::cout<<"HE"<<std::endl;
 
 	} else if (is_close_gear) {
 
@@ -161,7 +163,7 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 
 			elevator_->elevator_state = elevator_->reverse_state_h;
 
-		} else if ((shootTimer->Get() < (duty_cycle * period))) { //will run 40% of the time
+		} else if ((shootTimer->Get() < (duty_cycle * period))) {
 
 			elevator_->elevator_state = elevator_->elevate_state_h;
 
@@ -229,8 +231,13 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 
 		if (climber_->CheckCurrent() >= climber_->MAX_CURRENT) {
 
-			state = wait_for_button_state;
+			drawTimer->Start();
 
+			if (drawTimer->HasPeriodPassed(draw_wait_time)){
+
+				state = wait_for_button_state;
+
+			}
 		}
 
 		break;

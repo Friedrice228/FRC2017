@@ -21,7 +21,7 @@ public:
 	void ClimberStateMachine();
 	double CheckCurrent();
 
-	const int MAX_CURRENT = 35.0;
+	const int MAX_CURRENT = 50.0;
 
 	const int stop_state_h = 0;
 	const int climbing_state_h = 1;
