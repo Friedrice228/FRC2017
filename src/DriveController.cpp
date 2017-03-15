@@ -18,7 +18,7 @@ const double TICKS_PER_ROT = 4096;
 const double MAX_Y_RPM = 480;
 double DYN_MAX_Y_RPM = 480;
 const double MAX_X_RPM = 230; // Max RPM ACTUAL: 330
-const double MAX_YAW_RATE = (17.8 / 508) * MAX_Y_RPM; //max angular velocity divided by the max rpm multiplied by set max rpm
+const double MAX_YAW_RATE = (15.48 / 508) * MAX_Y_RPM; //max angular velocity divided by the max rpm multiplied by set max rpm
 
 const int DC_SLEEP_TIME = 1;
 
@@ -39,31 +39,31 @@ double kick_last_error_vel = 0;
 
 //CHANGEABLESTART
 
-const double K_P_YAW_T = 35.0;
+const double K_P_YAW_T = 17.0;
 
-const double K_P_YAW_AU = 32.0;
+const double K_P_YAW_AU = 17.0;
 const double K_D_YAW_AU = 0.0;
 
-const double K_P_YAW_H_VEL = 30.0;
+const double K_P_YAW_H_VEL = 17.0;
 
 const double K_P_YAW_HEADING_POS = 9;
 
-const double K_P_LEFT_VEL = 0.009;
-const double K_D_LEFT_VEL = 0.0;
+const double K_P_LEFT_VEL = 0.00565;//0.0077;
+const double K_D_LEFT_VEL = 0.0;// -0.025;
 const double K_F_LEFT_VEL = 1.0 / 508.0;
 double P_LEFT_VEL = 0;
 double D_LEFT_VEL = 0;
 double d_left_vel = 0; //dynamic value
 
-const double K_P_RIGHT_VEL = 0.009;
-const double K_D_RIGHT_VEL = 0.0;
+const double K_P_RIGHT_VEL = 0.00565;//0.0077;
+const double K_D_RIGHT_VEL = 0.0; //-0.025;
 const double K_F_RIGHT_VEL = 1.0 / 508.0;
 double P_RIGHT_VEL = 0;
 double D_RIGHT_VEL = 0;
 double d_right_vel = 0; //dynamic value
 
 const double K_P_KICK_VEL = .004;
-const double K_D_KICK_VEL = 0.0;
+const double K_D_KICK_VEL = .0001;
 const double K_F_KICK_VEL = 1.0 / 230.0; //1/330
 double P_KICK_VEL = 0;
 double D_KICK_VEL = 0;
@@ -257,7 +257,13 @@ bool *is_fc) { //finds targets for teleop
 
 	target_kick = 1.0 * (strafe < 0 ? -1 : 1) * (strafe * strafe) * MAX_X_RPM; //if joy value is less than 0 set to -1, otherwise to 1
 
-	target_yaw_rate = -1.0 * (JoyWheel->GetX()) * MAX_YAW_RATE; //Left will be positive
+	double joy_wheel_val = JoyWheel->GetX();
+
+	if (std::abs(joy_wheel_val) < .07){
+		joy_wheel_val = 0.0;
+	}
+
+	target_yaw_rate = -1.0 * (joy_wheel_val) * MAX_YAW_RATE; //Left will be positive
 
 	if (abs(target_kick) < 35) {
 		target_kick = 0;
@@ -382,7 +388,7 @@ void DriveController::HeadingPID(Joystick *joyWheel) { //angling
 	}
 
 	Drive(0.0, 0.0, 0.0, total_heading_h, K_P_RIGHT_VEL, K_P_LEFT_VEL,
-			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+			K_P_KICK_VEL, K_P_YAW_H_VEL, 0.0, K_D_RIGHT_VEL, K_D_LEFT_VEL, K_D_KICK_VEL, 0.0, 0.0, 0.0);
 
 }
 
@@ -523,18 +529,23 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 	D_RIGHT_VEL = k_d_right * d_right_vel;
 	D_KICK_VEL = k_d_kick * d_kick_vel;
 
-	double total_right = P_RIGHT_VEL + feed_forward_r + (Kv * target_vel_right);
-	double total_left = P_LEFT_VEL + feed_forward_l + (Kv * target_vel_left);
-	double total_kick = P_KICK_VEL + feed_forward_k
+	double total_right = D_RIGHT_VEL + P_RIGHT_VEL + feed_forward_r + (Kv * target_vel_right);
+	double total_left = D_LEFT_VEL + P_LEFT_VEL + feed_forward_l + (Kv * target_vel_left);
+	double total_kick = D_KICK_VEL + P_KICK_VEL + feed_forward_k
 			+ (Kv_KICK * target_vel_kick);
 
 	canTalonFrontLeft->Set(-total_left); //back cantalons follow front, don't need to set them individually
 	canTalonFrontRight->Set(total_right);
 	canTalonKicker->Set(-total_kick);
 
-	std::cout << "Left: " << l_current;
-	//std::cout << " Right: " << r_current;
-	std::cout << " Error: " << l_error_vel_t << std::endl;
+//	std::cout << "P: " << P_LEFT_VEL;
+//	std::cout << " D: " << D_LEFT_VEL;
+//	std::cout << " Ref: " << ref_left;
+//	std::cout << " Left: " << l_current;
+//	std::cout << " Error: " << l_error_vel_t << std::endl;
+
+	std::cout << "YAW RATE: " << yaw_rate_current;
+	std::cout << " ERROR: " << yaw_error << std::endl;
 
 	yaw_last_error = yaw_error;
 	l_last_error_vel = l_error_vel_t;
