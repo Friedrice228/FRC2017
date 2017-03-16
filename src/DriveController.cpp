@@ -39,31 +39,31 @@ double kick_last_error_vel = 0;
 
 //CHANGEABLESTART
 
-const double K_P_YAW_T = 17.0;
+const double K_P_YAW_T = 6.0;
 
-const double K_P_YAW_AU = 17.0;
+const double K_P_YAW_AU = 10.0;
 const double K_D_YAW_AU = 0.0;
 
-const double K_P_YAW_H_VEL = 17.0;
+const double K_P_YAW_H_VEL = 13.0;
 
 const double K_P_YAW_HEADING_POS = 9;
 
-const double K_P_LEFT_VEL = 0.00565;//0.0077;
+const double K_P_LEFT_VEL = 0.00550;//0.0077;
 const double K_D_LEFT_VEL = 0.0;// -0.025;
 const double K_F_LEFT_VEL = 1.0 / 508.0;
 double P_LEFT_VEL = 0;
 double D_LEFT_VEL = 0;
 double d_left_vel = 0; //dynamic value
 
-const double K_P_RIGHT_VEL = 0.00565;//0.0077;
+const double K_P_RIGHT_VEL = 0.00550;//0.0077;
 const double K_D_RIGHT_VEL = 0.0; //-0.025;
 const double K_F_RIGHT_VEL = 1.0 / 508.0;
 double P_RIGHT_VEL = 0;
 double D_RIGHT_VEL = 0;
 double d_right_vel = 0; //dynamic value
 
-const double K_P_KICK_VEL = .004;
-const double K_D_KICK_VEL = .0001;
+const double K_P_KICK_VEL = .005;
+const double K_D_KICK_VEL = 0.0;
 const double K_F_KICK_VEL = 1.0 / 230.0; //1/330
 double P_KICK_VEL = 0;
 double D_KICK_VEL = 0;
@@ -72,9 +72,9 @@ double d_kick_vel = 0; // dynamic value
 const double CONVERSION_DIVISION = 4096;
 const double CONVERSION_MULTIPLICATION = 600;
 
-const double K_P_RIGHT_DIS = 0.45;
-const double K_P_LEFT_DIS = 0.45;
-const double K_P_KICKER_DIS = 0.25; //TODO: check this value
+const double K_P_RIGHT_DIS = 0.225;
+const double K_P_LEFT_DIS = 0.225;
+const double K_P_KICKER_DIS = 0.175; //TODO: check this value
 
 const double K_I_RIGHT_DIS = 0.000;
 const double K_I_LEFT_DIS = 0.000;
@@ -131,7 +131,7 @@ double r_error_dis_t = 0;
 
 double kick_error_vel = 0;
 
-double timetokeep = 0.001;
+double timetokeep = 0.01;
 
 const int NUM_POINTS = 1500;
 const int NUM_INDEX = 12;
@@ -540,9 +540,9 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 
 //	std::cout << "P: " << P_LEFT_VEL;
 //	std::cout << " D: " << D_LEFT_VEL;
-//	std::cout << " Ref: " << ref_left;
-//	std::cout << " Left: " << l_current;
-//	std::cout << " Error: " << l_error_vel_t << std::endl;
+//	std::cout << " Ref: " << ref_kick;
+//	std::cout << " Left: " << kick_current;
+//	std::cout << " Error: " << kick_error_vel << std::endl;
 
 	std::cout << "YAW RATE: " << yaw_rate_current;
 	std::cout << " ERROR: " << yaw_error << std::endl;

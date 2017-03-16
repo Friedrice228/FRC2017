@@ -37,7 +37,7 @@ public:
 	LEDLightStrip *light_;
 	Compressor *compressor;
 	PowerDistributionPanel *pdp;
-
+	CameraServer *cam;
 
 
 // defining values for button actions
@@ -153,6 +153,10 @@ public:
 
 		compressor = new Compressor(31);
 		compressor->SetClosedLoopControl(true);
+
+		cam = CameraServer::GetInstance();
+		cam->StartAutomaticCapture(0);
+
 
 	} // RobotInit
 
