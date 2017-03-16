@@ -720,9 +720,6 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 			//}
 
 			index1++;
-			for (int j = 0; j < NUM_INDEX; j++) {
-				last_drive_ref[j] = drive_ref[j];
-			}
 		}
 
 		if (index1 >= NUM_POINTS) { //stop at the end of the motion profile, this number is set after the creation of the array
