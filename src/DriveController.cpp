@@ -20,7 +20,7 @@ double DYN_MAX_Y_RPM = 480;
 const double MAX_X_RPM = 230; // Max RPM ACTUAL: 330
 const double MAX_YAW_RATE = (15.48 / 508) * MAX_Y_RPM; //max angular velocity divided by the max rpm multiplied by set max rpm
 
-const int DC_SLEEP_TIME = 1;
+const int DC_SLEEP_TIME = 10;
 
 const int CAN_TALON_FRONT_LEFT = 22;
 const int CAN_TALON_BACK_LEFT = 18;
@@ -164,6 +164,7 @@ int vision_track_state = stamp_state;
 
 Timer *timerTeleop = new Timer();
 Timer *timerAuton = new Timer();
+Timer *observer = new Timer();
 
 std::thread HDriveThread, DrivePIDThread;
 
@@ -544,8 +545,8 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 //	std::cout << " Left: " << kick_current;
 //	std::cout << " Error: " << kick_error_vel << std::endl;
 
-	std::cout << "YAW RATE: " << yaw_rate_current;
-	std::cout << " ERROR: " << yaw_error << std::endl;
+//	std::cout << "YAW RATE: " << yaw_rate_current;
+//	std::cout << " ERROR: " << yaw_error << std::endl;
 
 	yaw_last_error = yaw_error;
 	l_last_error_vel = l_error_vel_t;
@@ -661,6 +662,8 @@ bool *is_heading, bool *is_vision, bool *is_fc,
 
 			if (timerTeleop->HasPeriodPassed(timetokeep)) {
 
+				timerTeleop->Reset();
+
 				driveController->HDrive(JoyThrottle, JoyWheel, is_fc);
 
 			}
@@ -675,6 +678,8 @@ bool *is_heading, bool *is_vision, bool *is_fc,
 
 				driveController->HeadingPID(JoyWheel);
 
+				timerTeleop->Reset();
+
 			}
 		}
 		while (frc::RobotState::IsEnabled() && !frc::RobotState::IsAutonomous()
@@ -686,6 +691,8 @@ bool *is_heading, bool *is_vision, bool *is_fc,
 			if (timerTeleop->HasPeriodPassed(timetokeep)) {
 
 				driveController->VisionP();
+
+				timerTeleop->Reset();
 
 			}
 
@@ -716,6 +723,8 @@ void DriveController::DrivePIDWrapper(DriveController *driveController) {
 			//} else { //vision off
 
 				driveController->DrivePID();
+
+				timerAuton->Reset();
 
 			//}
 
