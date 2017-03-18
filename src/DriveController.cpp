@@ -544,8 +544,8 @@ void DriveController::Drive(double ref_kick, double ref_right, double ref_left,
 //	std::cout << " Left: " << kick_current;
 //	std::cout << " Error: " << kick_error_vel << std::endl;
 
-	std::cout << "YAW RATE: " << yaw_rate_current;
-	std::cout << " ERROR: " << yaw_error << std::endl;
+//	std::cout << "YAW RATE: " << yaw_rate_current;
+//	std::cout << " ERROR: " << yaw_error << std::endl;
 
 	yaw_last_error = yaw_error;
 	l_last_error_vel = l_error_vel_t;

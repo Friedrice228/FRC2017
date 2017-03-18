@@ -44,7 +44,7 @@ Flywheel::Flywheel() {
 	canTalonFlywheelFrontRight->ConfigPeakOutputVoltage(+12.0f, +2.0f);
 	canTalonFlywheelFrontRight->SetSensorDirection(true); //dont change
 	canTalonFlywheelFrontRight->SelectProfileSlot(0);
-	canTalonFlywheelFrontRight->SetSensorDirection(true); //false if Koba
+	canTalonFlywheelFrontRight->SetSensorDirection(false); //false if Koba
 
 	//Set all other motors as slaves that will follow the output of the master
 	canTalonFlywheelFrontLeft = new CANTalon(CAN_TALON_FLYWHEEL_FRONT_LEFT);

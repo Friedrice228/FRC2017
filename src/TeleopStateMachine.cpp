@@ -37,6 +37,8 @@ bool elevate_go = false;
 
 double draw_wait_time = 1;
 
+bool current_overload = false;
+
 TeleopStateMachine::TeleopStateMachine(Flywheel *flywheelP, Conveyor *conveyorP,
 		GearRail *gearRailP, Elevator *elevatorP,
 		DriveController *driveControllerP, Vision *visionP, Climber *climberP) {
@@ -88,7 +90,7 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 		gear_rail->gear_rail_state = gear_rail->open_state_h;
 
 
-	} else if (is_close_gear) {
+	} else {// if (is_close_gear) {
 
 		gear_rail->gear_rail_state = gear_rail->close_state_h;
 	}
@@ -236,6 +238,8 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 			if (drawTimer->HasPeriodPassed(draw_wait_time)){
 
 				state = wait_for_button_state;
+
+				drawTimer->Reset();
 
 			}
 		}

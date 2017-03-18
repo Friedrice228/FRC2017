@@ -39,7 +39,6 @@ public:
 	PowerDistributionPanel *pdp;
 	CameraServer *cam;
 
-
 // defining values for button actions
 	const int JOY_OP = 1;
 	const int JOY_THROTTLE = 0;
@@ -57,15 +56,10 @@ public:
 	const int STOP_SHOOT_BUTTON = 3;
 	const int RETURN_BUTTON = 6; //NOT USED
 
-
-
-	const int HEADING_CONTROL_BUTTON = 5;
-	const int VISION_TRACK_BUTTON = 6;
+	const int HEADING_CONTROL_BUTTON = 6;
+	const int VISION_TRACK_BUTTON = 5;
 	const int FC_BUTTON = 1;
 	const int REG_BUTTON = 2;
-
-
-
 
 	frc::SendableChooser<std::string> autonChooser;
 	frc::SendableChooser<std::string> allianceChooser;
@@ -79,7 +73,7 @@ public:
 	const std::string shootAndLoadAuton = "Shoot and Load"; //get balls from hopper, then shoot
 	const std::string driveForward = "Drive Forward";
 	const std::string fancyDriveForward = "Fancy Drive Forward";
-
+	const std::string stopAuton = "Stop Auton";
 
 	const std::string redAlliance = "Red Alliance";
 	const std::string blueAlliance = "Blue Alliance";
@@ -98,6 +92,8 @@ public:
 	int Type = Reg;
 
 	bool is_heading;bool is_vision;bool is_fc;
+
+	bool blue = false;bool red = false;
 
 	double total = 0;
 
@@ -131,14 +127,17 @@ public:
 		teleop_state_machine = new TeleopStateMachine(fly_wheel, conveyor_,
 				gear_rail, elevator_, drive_controller, vision_, climber_);
 
-		autonChooser.AddDefault(gearPlacementUsualAuton, gearPlacementUsualAuton);
+		autonChooser.AddDefault(gearPlacementUsualAuton,
+				gearPlacementUsualAuton);
 		autonChooser.AddObject(gearPlacementAndShoot, gearPlacementAndShoot);
 		autonChooser.AddObject(gearPlacementRight, gearPlacementRight);
 		autonChooser.AddObject(gearPlacementLeft, gearPlacementLeft);
 		autonChooser.AddObject(shootAuton, shootAuton);
 		autonChooser.AddObject(shootAndLoadAuton, shootAndLoadAuton);
-		autonChooser.AddObject(gearPlacementUsualVision, gearPlacementUsualVision);
+		autonChooser.AddObject(gearPlacementUsualVision,
+				gearPlacementUsualVision);
 		autonChooser.AddObject(driveForward, driveForward);
+		autonChooser.AddObject(stopAuton, stopAuton);
 
 		frc::SmartDashboard::PutData("Auto Modes", &autonChooser);
 
@@ -156,7 +155,6 @@ public:
 
 		cam = CameraServer::GetInstance();
 		cam->StartAutomaticCapture(0);
-
 
 	} // RobotInit
 
@@ -176,7 +174,7 @@ public:
 
 		if (autoSelected == gearPlacementUsualAuton) { //choose auton sequence
 
-			if (allianceSelected == redAlliance){
+			if (allianceSelected == redAlliance) {
 
 				autonomous_->FillProfile("/home/lvuser/Gear_Profile_Red.csv");
 
@@ -186,15 +184,15 @@ public:
 
 			}
 
-		} else if(autoSelected == gearPlacementUsualVision){
+		} else if (autoSelected == gearPlacementUsualVision) {
 
-			if (allianceSelected == redAlliance){
+			if (allianceSelected == redAlliance) {
 
-			} else{
+			} else {
 
 			}
 
-		}else if (autoSelected == gearPlacementRight) {
+		} else if (autoSelected == gearPlacementRight) {
 
 			autonomous_->FillProfile("/home/lvuser/Gear_Right_Profile.csv");
 
@@ -204,8 +202,7 @@ public:
 
 			autonomous_->FillProfile("/home/lvuser/Drive_Forward_Profile.csv");
 
-		}else if (autoSelected == shootAuton) {
-
+		} else if (autoSelected == shootAuton) {
 
 			if (allianceSelected == redAlliance) {
 
@@ -264,7 +261,7 @@ public:
 
 	void TeleopPeriodic() {
 
-	//	std::cout<<pdp->GetTotalCurrent()<<std::endl;
+		//	std::cout<<pdp->GetTotalCurrent()<<std::endl;
 
 //		std::cout<<"R1: "<< drive_controller->canTalonBackRight->GetOutputCurrent();//<<std::endl;
 //		std::cout<<" R2: "<< drive_controller->canTalonFrontRight->GetOutputCurrent();//<<std::endl;
