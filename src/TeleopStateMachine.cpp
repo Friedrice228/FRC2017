@@ -90,7 +90,7 @@ bool is_ret, bool is_popcorn, bool is_second_fire, bool is_stop_shoot) {
 		gear_rail->gear_rail_state = gear_rail->open_state_h;
 
 
-	} else {// if (is_close_gear) {
+	} else if (is_close_gear) {
 
 		gear_rail->gear_rail_state = gear_rail->close_state_h;
 	}
