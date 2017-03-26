@@ -47,7 +47,7 @@ public:
 	void ZeroI();
 	int GetIndex();
 	void ResetIndex();
-	void SetRef(double refs[][12]);
+	void SetRef(double refs[][13]);
 	double GetRef();
 	void SetInitHeading();
 	void SetAngle();

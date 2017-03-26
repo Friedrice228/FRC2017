@@ -8,11 +8,11 @@
 #include <Autonomous.h>
 
 const int NUM_POINTS = 1500;
-const int NUM_INDEX = 12;
-const int PISTON_INDEX = 7;
-const int FLYWHEEL_INDEX = 8;
-const int CONVEYOR_INDEX = 9;
-const int ELEVATOR_INDEX = 10;
+const int NUM_INDEX = 13;
+const int PISTON_INDEX = 8;
+const int FLYWHEEL_INDEX = 9;
+const int CONVEYOR_INDEX = 10;
+const int ELEVATOR_INDEX = 11;
 
 double refs[NUM_POINTS][NUM_INDEX];
 
