@@ -72,8 +72,8 @@ double d_kick_vel = 0; // dynamic value
 const double CONVERSION_DIVISION = 4096;
 const double CONVERSION_MULTIPLICATION = 600;
 
-const double K_P_RIGHT_DIS = 0.028; //0.225
-const double K_P_LEFT_DIS = 0.028; //0.225
+const double K_P_RIGHT_DIS = 0.038; //0.225
+const double K_P_LEFT_DIS = 0.038; //0.225
 const double K_P_KICKER_DIS = 0.180; //TODO: check this value
 const double K_P_YAW_DIS = 0.458;
 
@@ -387,8 +387,8 @@ void DriveController::DrivePID() { //auton
 	r_last_error = r_error_dis_au;
 	kick_last_error = k_error_dis_au;
 
-	std::cout << "L: " << l_error_dis_au;
-	std::cout << " R: " << r_error_dis_au << std::endl;
+	std::cout << "L: " << l_error_dis_au << " " << l_dis << " " << refLeft << std::endl;
+	std::cout << " R: " << r_error_dis_au << " " << r_dis << " " << refRight << std::endl;
 	//std::cout << " L: " << P_LEFT_DIS << std::endl;
 
 }
