@@ -17,7 +17,7 @@ const double TICKS_PER_ROT = 4096;
 
 const double MAX_Y_RPM = 625;
 double DYN_MAX_Y_RPM = 625;
-const double MAX_X_RPM = 370; // Max RPM ACTUAL: 330
+const double MAX_X_RPM = 400; // Max RPM ACTUAL: 330
 const double MAX_YAW_RATE = (19.04 / 625) * MAX_Y_RPM; //max angular velocity divided by the max rpm multiplied by set max rpm
 
 const int DC_SLEEP_TIME = 1;
@@ -64,7 +64,7 @@ double d_right_vel = 0; //dynamic value
 
 const double K_P_KICK_VEL = .00371; //0.00311
 const double K_D_KICK_VEL = 0.0;
-const double K_F_KICK_VEL = 1.0 / 370.0;
+const double K_F_KICK_VEL = 1.0 / 400.0;
 double P_KICK_VEL = 0;
 double D_KICK_VEL = 0;
 double d_kick_vel = 0; // dynamic value
@@ -72,15 +72,15 @@ double d_kick_vel = 0; // dynamic value
 const double CONVERSION_DIVISION = 4096;
 const double CONVERSION_MULTIPLICATION = 600;
 
-const double K_P_RIGHT_DIS = 0.038; //0.225
-const double K_P_LEFT_DIS = 0.038; //0.225
-const double K_P_KICKER_DIS = 0.180; //TODO: check this value
-const double K_P_YAW_DIS = 0.458;
+const double K_P_RIGHT_DIS = 0.088; //0.225
+const double K_P_LEFT_DIS = 0.088; //0.225
+const double K_P_KICKER_DIS = 0.280; //TODO: check this value
+const double K_P_YAW_DIS = 0.558;
 
-const double K_I_RIGHT_DIS = 0.000;
-const double K_I_LEFT_DIS = 0.000;
+const double K_I_RIGHT_DIS = 0.055;
+const double K_I_LEFT_DIS = 0.055;
 const double K_I_KICKER_DIS = 0.0;
-const double K_I_YAW_DIS = 0.03;
+const double K_I_YAW_DIS = 0.11;
 
 const double K_D_RIGHT_DIS = 0.0;
 const double K_D_LEFT_DIS = 0.0;
@@ -201,7 +201,7 @@ DriveController::DriveController(Vision *vis) {
 
 	canTalonKicker = new CANTalon(CAN_TALON_KICKER);
 
-	ahrs = new AHRS(SPI::Port::kMXP);
+	ahrs = new AHRS(SPI::Port::kMXP, 200);
 
 	kickerPiston = new DoubleSolenoid(4, 5, 6);
 
@@ -314,6 +314,11 @@ void DriveController::DrivePID() { //auton
 		tarVelKick = 0.0;
 	}
 
+	double r_current = -((double) canTalonFrontRight->GetEncVel()
+				/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
+	double l_current = ((double) canTalonFrontLeft->GetEncVel()
+					/ (double) CONVERSION_DIVISION) * CONVERSION_MULTIPLICATION;
+
 	//conversion to feet
 	double r_dis = -(((double) canTalonFrontRight->GetEncPosition()
 			/ TICKS_PER_ROT) * (WHEEL_DIAMETER * PI) / 12);
@@ -327,6 +332,14 @@ void DriveController::DrivePID() { //auton
 	r_error_dis_au = refRight - r_dis;
 	k_error_dis_au = refKick - k_dis;
 	y_error_dis_au = refYaw - y_dis;
+
+	if (std::abs(tarVelLeft - tarVelRight) < .05 && (std::abs(r_current) < 10) && (std::abs(l_current) < 10)){
+
+		y_error_dis_au = 0;
+
+	}
+
+	std::cout << "Error: " << y_error_dis_au << std::endl;
 
 	i_right += (r_error_dis_au);
 	d_right = (r_error_dis_au - r_last_error);
@@ -387,8 +400,7 @@ void DriveController::DrivePID() { //auton
 	r_last_error = r_error_dis_au;
 	kick_last_error = k_error_dis_au;
 
-	std::cout << "L: " << l_error_dis_au << " " << l_dis << " " << refLeft << std::endl;
-	std::cout << " R: " << r_error_dis_au << " " << r_dis << " " << refRight << std::endl;
+	std::cout << "L: " << l_dis << std::endl;
 	//std::cout << " L: " << P_LEFT_DIS << std::endl;
 
 }
@@ -620,6 +632,12 @@ void DriveController::ZeroI() {
 	i_right = 0;
 	i_left = 0;
 	i_yaw = 0;
+
+	y_error_dis_au = 0;
+	l_error_dis_au = 0;
+	r_error_dis_au = 0;
+
+	StopAll();
 
 }
 

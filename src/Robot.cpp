@@ -198,6 +198,8 @@ public:
 
 		} else if (autoSelected == gearPlacementLeft) {
 
+			autonomous_->FillProfile("/home/lvuser/Gear_Left_Profile.csv");
+
 		} else if (autoSelected == driveForward) {
 
 			autonomous_->FillProfile("/home/lvuser/Drive_Forward_Profile.csv");
@@ -257,11 +259,11 @@ public:
 
 		drive_controller->ahrs->ZeroYaw();
 
+		drive_controller->ZeroI();
+
 	}
 
 	void TeleopPeriodic() {
-
-		//	std::cout<<pdp->GetTotalCurrent()<<std::endl;
 
 //		std::cout<<"R1: "<< drive_controller->canTalonBackRight->GetOutputCurrent();//<<std::endl;
 //		std::cout<<" R2: "<< drive_controller->canTalonFrontRight->GetOutputCurrent();//<<std::endl;
@@ -427,6 +429,8 @@ public:
 		drive_controller->DisableAutonThreads();
 
 		fly_wheel->DisableThreads();
+
+		drive_controller->ZeroI();
 
 	}
 
