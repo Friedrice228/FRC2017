@@ -62,7 +62,7 @@ double P_RIGHT_VEL = 0;
 double D_RIGHT_VEL = 0;
 double d_right_vel = 0; //dynamic value
 
-const double K_P_KICK_VEL = .00371; //0.00311
+const double K_P_KICK_VEL = .00365; //0.00311
 const double K_D_KICK_VEL = 0.0;
 const double K_F_KICK_VEL = 1.0 / 400.0;
 double P_KICK_VEL = 0;
@@ -339,7 +339,7 @@ void DriveController::DrivePID() { //auton
 
 	}
 
-	std::cout << "Error: " << y_error_dis_au << std::endl;
+	//std::cout << "Error: " << y_error_dis_au << std::endl;
 
 	i_right += (r_error_dis_au);
 	d_right = (r_error_dis_au - r_last_error);
@@ -400,7 +400,7 @@ void DriveController::DrivePID() { //auton
 	r_last_error = r_error_dis_au;
 	kick_last_error = k_error_dis_au;
 
-	std::cout << "L: " << l_dis << std::endl;
+	std::cout << "L: " << target_rpm_left << std::endl;
 	//std::cout << " L: " << P_LEFT_DIS << std::endl;
 
 }
